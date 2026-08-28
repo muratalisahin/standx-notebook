@@ -783,39 +783,53 @@
         }
       }
 
+      function parseOverview(j) {
+        return (j.symbols || []).map((s) => ({
+          symbol: s.symbol,
+          mark: Number(s.mark_price ?? s.last_price ?? 0),
+          change: Number(s.price_change_pct ?? 0),
+        })).filter((s) => s.symbol && Number.isFinite(s.mark));
+      }
+
       function useMarkets(list, live) {
+        const hovered = pairsEl.querySelector(".pair.on");
+        const holdSym = hovered && markets[Number(hovered.dataset.idx)]
+          ? markets[Number(hovered.dataset.idx)].symbol
+          : "";
         markets = list;
         renderPairs();
-        botMark.title = live ? "live" : "snapshot (CORS / file://)";
+        botMark.title = live ? "StandX live" : "snapshot";
         const eth = markets.find((s) => s.symbol === "ETH-USD");
         if (eth) tickDip(eth.mark);
+        const hold = holdSym ? markets.findIndex((s) => s.symbol === holdSym) : -1;
+        if (hold >= 0) {
+          const btn = pairsEl.querySelector('[data-idx="' + hold + '"]');
+          if (btn) {
+            btn.classList.add("on");
+            showCard(markets[hold]);
+          }
+        }
       }
 
       async function pullMark() {
-        try {
-          const r = await fetch("https://perps.standx.com/api/query_market_overview");
-          if (!r.ok) throw new Error("http " + r.status);
-          const j = await r.json();
-          const list = (j.symbols || []).map((s) => ({
-            symbol: s.symbol,
-            mark: Number(s.mark_price ?? s.last_price ?? 0),
-            change: Number(s.price_change_pct ?? 0),
-          })).filter((s) => s.symbol);
-          if (!list.length) throw new Error("empty");
-          useMarkets(list, true);
-          return;
-        } catch (_) { /* file:// / CORS */ }
-        if (!markets.length) useMarkets(SNAP.map((s) => ({ ...s })), false);
-        else {
-          const eth = markets.find((s) => s.symbol === "ETH-USD");
-          const base = eth ? eth.mark : (peak || 2485.4);
-          tickDip(base * (0.992 + Math.random() * 0.012));
+        const urls = ["/api/market", "https://perps.standx.com/api/query_market_overview"];
+        for (const url of urls) {
+          try {
+            const r = await fetch(url, { cache: "no-store" });
+            if (!r.ok) continue;
+            const j = await r.json();
+            const list = parseOverview(j);
+            if (!list.length) continue;
+            useMarkets(list, true);
+            return;
+          } catch (_) { /* next source */ }
         }
+        if (!markets.length) useMarkets(SNAP.map((s) => ({ ...s })), false);
       }
 
       logBot(t().botWait);
       pullMark();
-      setInterval(pullMark, 8000);
+      setInterval(pullMark, 5000);
       applyLang();
     </script>
   </body>

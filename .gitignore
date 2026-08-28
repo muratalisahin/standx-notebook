@@ -1,0 +1,7 @@
+.vercel
+__pycache__/
+_preview/
+*.mp4
+*.wav
+render_*.py
+make_*.py

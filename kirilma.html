@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a0f0d" />
+    <title>People break here — StandX friction map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #0a0f0d;
+        --paper: #111916;
+        --ink: #e8f0eb;
+        --dim: #7a9186;
+        --line: #1e2e28;
+        --green: #2ee27a;
+        --red: #ef5a68;
+        --amber: #e8b84a;
+        --glow: #2ee27a22;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Inter, system-ui, sans-serif;
+        line-height: 1.5;
+      }
+      .gridBg {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(#1e2e2818 1px, transparent 1px) 0 0 / 24px 24px,
+          radial-gradient(600px 400px at 80% 0%, #2ee27a0a, transparent 60%),
+          radial-gradient(500px 360px at 0% 100%, #10314a18, transparent 55%);
+      }
+      .wrap { position: relative; max-width: 960px; margin: 0 auto; padding: 32px 20px 100px; }
+      .eyebrow {
+        font: 600 11px "IBM Plex Mono", monospace;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--green);
+        margin: 0 0 10px;
+      }
+      h1 {
+        font-size: clamp(1.85rem, 4.5vw, 2.6rem);
+        letter-spacing: -0.03em;
+        margin: 0 0 10px;
+        line-height: 1.08;
+      }
+      .lede { font-size: 16px; color: var(--dim); max-width: 58ch; margin: 0 0 8px; }
+      .hint {
+        font: 500 12px "IBM Plex Mono", monospace;
+        color: var(--amber);
+        margin: 0 0 20px;
+      }
+      .warn {
+        font-size: 12px;
+        font-family: "IBM Plex Mono", monospace;
+        color: var(--dim);
+        margin: 0 0 22px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        background: #0d1411;
+        border-radius: 8px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 22px;
+      }
+      .stat {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        padding: 14px 16px;
+        border-radius: 10px;
+      }
+      .stat b {
+        display: block;
+        font-size: 26px;
+        font-family: "IBM Plex Mono", monospace;
+        color: var(--green);
+      }
+      .stat span { font-size: 11px; color: var(--dim); }
+      .nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 28px;
+      }
+      .nav a {
+        font: 600 11px "IBM Plex Mono", monospace;
+        letter-spacing: 0.06em;
+        text-decoration: none;
+        color: var(--dim);
+        border: 1px solid var(--line);
+        padding: 7px 11px;
+        border-radius: 999px;
+        transition: color 0.15s, border-color 0.15s, background 0.15s;
+      }
+      .nav a:hover, .nav a.on {
+        color: var(--green);
+        border-color: #2ee27a55;
+        background: #2ee27a0d;
+      }
+      .map {
+        position: relative;
+        padding-left: 20px;
+        border-left: 2px solid #2ee27a44;
+      }
+      .zone { margin-bottom: 36px; scroll-margin-top: 24px; }
+      .zoneHead {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .zoneHead h2 {
+        margin: 0;
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-family: "IBM Plex Mono", monospace;
+        color: var(--green);
+      }
+      .zoneHead em {
+        font-style: normal;
+        font-size: 11px;
+        color: var(--dim);
+        font-family: "IBM Plex Mono", monospace;
+      }
+      .crack {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin-bottom: 12px;
+        position: relative;
+        cursor: default;
+        display: flex;
+        flex-direction: column;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.25s,
+          background 0.2s;
+        z-index: 1;
+        overflow: hidden;
+      }
+      .crack::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 0;
+        background: linear-gradient(90deg, transparent, var(--green), transparent);
+        opacity: 0;
+        transition: height 0.22s ease, opacity 0.22s ease;
+      }
+      .crack::before {
+        content: "";
+        position: absolute;
+        left: -23px;
+        top: 50%;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--bg);
+        border: 2px solid var(--red);
+        transform: translateY(-50%);
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .crack:hover, .crack.lit {
+        border-color: #2ee27a55;
+        background: #141f1a;
+        box-shadow: 0 -4px 24px #2ee27a18, 0 8px 28px #00000055;
+        z-index: 20;
+      }
+      .crack:hover::after, .crack.lit::after {
+        height: 3px;
+        opacity: 1;
+      }
+      .crack:hover::before, .crack.lit::before {
+        border-color: var(--green);
+        box-shadow: 0 0 12px var(--green);
+      }
+      .crackHead {
+        order: 2;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .heat {
+        flex-shrink: 0;
+        font: 600 10px "IBM Plex Mono", monospace;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        color: var(--dim);
+      }
+      .heat.hot { color: var(--red); border-color: #ef5a6844; background: #ef5a6810; }
+      .heat.warm { color: var(--amber); border-color: #e8b84a44; background: #e8b84a10; }
+      .q {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0;
+        line-height: 1.35;
+      }
+      .peek { display: none; }
+      .answer {
+        order: 1;
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, opacity 0.22s ease, padding 0.22s;
+        margin: 0;
+        padding: 0;
+      }
+      .crack:hover .answer, .crack.lit .answer {
+        max-height: 120px;
+        opacity: 1;
+        padding: 0 0 12px;
+        margin-bottom: 2px;
+        border-bottom: 1px solid var(--line);
+      }
+      .why {
+        font-size: 13px;
+        color: var(--ink);
+        margin: 0 0 6px;
+        padding-top: 10px;
+        border-top: none;
+      }
+      .why strong { color: var(--green); font-weight: 600; }
+      .fix {
+        font: 500 11px "IBM Plex Mono", monospace;
+        color: var(--dim);
+        margin: 0;
+        padding: 0;
+        background: none;
+        border: none;
+      }
+      .fix b { color: var(--green); font-weight: 600; }
+      /* Stander guide */
+      .pointerLayer {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 15;
+        overflow: visible;
+      }
+      .pointerLayer line.rod { display: none; }
+      .pointerLayer line.beam {
+        stroke: var(--green);
+        stroke-width: 2;
+        stroke-linecap: round;
+        filter: drop-shadow(0 0 6px #2ee27a99);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      .pointerLayer.show line { opacity: 1; }
+      .pointerLayer circle {
+        fill: var(--green);
+        filter: drop-shadow(0 0 8px var(--green));
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      .pointerLayer.show circle { opacity: 1; }
+      .guide {
+        position: fixed;
+        pointer-events: none;
+        z-index: 100;
+        opacity: 0;
+        transform: translateY(10px) scale(0.9);
+        transition: opacity 0.24s ease, transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+        width: 210px;
+        height: 130px;
+        overflow: visible;
+        perspective: 720px;
+      }
+      .guide.show {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      .guideMascot {
+        position: absolute;
+        inset: 0;
+        transform-origin: center 85%;
+        transform-style: preserve-3d;
+      }
+      .guideMascot.flip { transform: scaleX(-1); }
+      .mascotGlow {
+        position: absolute;
+        left: 50%;
+        top: 58%;
+        width: 120px;
+        height: 36px;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(ellipse, #2ee27a28 0%, transparent 70%);
+        filter: blur(8px);
+        pointer-events: none;
+      }
+      .mascotFloor {
+        position: absolute;
+        left: 50%;
+        bottom: 2px;
+        width: 90px;
+        height: 14px;
+        transform: translateX(-50%);
+        background: radial-gradient(ellipse, #00000088 0%, transparent 72%);
+        filter: blur(4px);
+      }
+      .guideMascot img {
+        width: 210px;
+        height: auto;
+        display: block;
+        object-fit: contain;
+        transform: rotateY(-10deg) rotateX(4deg) translateZ(12px);
+        filter:
+          contrast(1.12) saturate(1.15) brightness(1.04)
+          drop-shadow(-6px 4px 12px #000000bb)
+          drop-shadow(0 18px 36px #000000aa)
+          drop-shadow(2px 0 16px #2ee27a22);
+        transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), filter 0.32s ease;
+      }
+      .guide.show .guideMascot img {
+        transform: rotateY(-10deg) rotateX(4deg) translateZ(18px) scale(1.04);
+        filter:
+          contrast(1.14) saturate(1.18) brightness(1.06)
+          drop-shadow(-8px 6px 16px #000000cc)
+          drop-shadow(0 22px 44px #000000bb)
+          drop-shadow(3px 0 20px #2ee27a33);
+      }
+      .guideMascot.flip img {
+        transform: rotateY(10deg) rotateX(4deg) translateZ(12px);
+      }
+      .guide.show .guideMascot.flip img {
+        transform: rotateY(10deg) rotateX(4deg) translateZ(18px) scale(1.04);
+      }
+      .stickHand {
+        position: absolute;
+        right: 22px;
+        top: 38%;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: transparent;
+      }
+      .guideMascot.flip .stickHand {
+        right: auto;
+        left: 22px;
+      }
+      footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        font-size: 12px;
+        color: var(--dim);
+        font-family: "IBM Plex Mono", monospace;
+      }
+      footer a { color: var(--green); }
+      @media (max-width: 720px) {
+        .stats { grid-template-columns: repeat(2, 1fr); }
+        .guide, .pointerLayer { display: none; }
+        .crack.lit .answer { max-height: 160px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .crack, .guide, .answer { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="gridBg" aria-hidden="true"></div>
+    <div class="wrap">
+      <p class="eyebrow">Oracle raw material · not a product page</p>
+      <h1>People break here.</h1>
+      <p class="lede">Twenty recurring question patterns from StandX Discord. No names — a map of where friction actually lives.</p>
+      <p class="hint">Hover a crack — Stander points the top.</p>
+      <p class="warn">Not a raw Discord export. Compiled from traders-chat, Growth Path, and Oracle routing. Not official StandX documentation. Not investment advice.</p>
+
+      <div class="stats">
+        <div class="stat"><b>20</b><span>question patterns</span></div>
+        <div class="stat"><b>7</b><span>break bands</span></div>
+        <div class="stat"><b>0</b><span>names attached</span></div>
+        <div class="stat"><b>∞</b><span>repeat tickets</span></div>
+      </div>
+
+      <nav class="nav" id="nav"></nav>
+      <div class="map" id="map"></div>
+
+      <footer>Personal research note · Aug 2026 · Oracle feedstock · <a href="https://docs.standx.com" target="_blank" rel="noopener">docs.standx.com</a> · <a href="/">maker notebook</a></footer>
+    </div>
+
+    <svg class="pointerLayer" id="pointerLayer" aria-hidden="true">
+      <line class="rod" id="stickRod" x1="0" y1="0" x2="0" y2="0" />
+      <line class="beam" id="stickLine" x1="0" y1="0" x2="0" y2="0" />
+      <circle id="stickTip" cx="0" cy="0" r="5" />
+    </svg>
+
+    <div class="guide" id="guide" aria-hidden="true">
+      <div class="guideMascot" id="guideMascot">
+        <span class="mascotGlow" aria-hidden="true"></span>
+        <span class="mascotFloor" aria-hidden="true"></span>
+        <img src="images/stander-teacher.png" alt="" width="210" height="130" />
+        <span class="stickHand" id="stickHand"></span>
+      </div>
+    </div>
+
+    <script>
+      const ZONES = [
+        {
+          id: "cash",
+          tag: "01 · CASH / PERPS",
+          note: "most common",
+          items: [
+            {
+              heat: "hot",
+              q: "I minted DUSD — why can't I open a trade?",
+              why: "<strong>Cash ≠ Perps.</strong> Mint lands in Cash Wallet first. Margin, trading, and holder points only count once funds sit in Perps (or a Vault).",
+              fix: "<b>Move:</b> Cash Wallet → Perps Wallet, then open EXECUTE.",
+            },
+            {
+              heat: "hot",
+              q: "Why no holder points? I have DUSD in my wallet.",
+              why: "<strong>Cash balance doesn't count.</strong> Holder scoring tracks Perps-side DUSD. Sitting in Cash is invisible to the campaign.",
+              fix: "<b>Check:</b> Perps Wallet balance, not MetaMask total.",
+            },
+            {
+              heat: "warm",
+              q: "DUSD shows on MetaMask but Perps is empty — did I lose funds?",
+              why: "<strong>Two layers.</strong> On-chain wallet view and in-app Cash/Perps buckets get conflated. Funds usually landed in Cash, not gone.",
+              fix: "<b>Open app</b> → Wallet tab → see Cash vs Perps split.",
+            },
+            {
+              heat: "warm",
+              q: "Which wallet do I transfer to — Cash or Perps?",
+              why: "<strong>Trade = Perps.</strong> Cash is the main inbound account; Perps is where orders draw margin. Most breakages are one transfer short.",
+              fix: "<b>Rule:</b> inbound → Cash (automatic) → Perps (manual) → trade.",
+            },
+          ],
+        },
+        {
+          id: "sell",
+          tag: "02 · LONG / SELL",
+          note: "UI wording",
+          items: [
+            {
+              heat: "hot",
+              q: "I'm long ETH — where is the Sell button?",
+              why: "<strong>There isn't one on an open position.</strong> The UI switches to Close / Reduce. People search for Sell because spot language stuck in their head.",
+              fix: "<b>Look for:</b> Close or Reduce on the position row, not the order ticket.",
+            },
+            {
+              heat: "warm",
+              q: "How do I close half the position?",
+              why: "<strong>Size smaller than your full position</strong> and tick reduce-only. Without it, the engine may open a reverse side instead of shrinking.",
+              fix: "<b>Partial close:</b> amount &lt; position size + reduce-only ON.",
+            },
+            {
+              heat: "warm",
+              q: "What happens if I skip reduce-only on a partial close?",
+              why: "<strong>Flip risk.</strong> The most skipped checkbox. You intended to trim; the book reads it as a new directional bet.",
+              fix: "<b>Always</b> reduce-only when closing, not opening.",
+            },
+          ],
+        },
+        {
+          id: "maker",
+          tag: "03 · MAKER POINTS / HOURS",
+          note: "two systems",
+          items: [
+            {
+              heat: "hot",
+              q: "My limit sat for hours — where are my Maker points?",
+              why: "<strong>3 seconds alone isn't enough.</strong> Maker Points need rest time <em>and</em> proximity to mark. Outside the band → 0% multiplier even if the order never moves.",
+              fix: "<b>Check distance:</b> ~within 100 bps of mark, resting 3s+.",
+            },
+            {
+              heat: "hot",
+              q: "Are Maker Points and Maker Hours the same thing?",
+              why: "<strong>No — parallel tracks.</strong> Points: one-sided limit, 3s+, mark-distance weighted. Hours (SIP-5A): both sides quoted ~10 bps, 30 min per hour clock.",
+              fix: "<b>Pick a lane:</b> one-sided Points OR two-sided Hours — not both by accident.",
+            },
+            {
+              heat: "warm",
+              q: "I quote both sides — which reward am I actually earning?",
+              why: "<strong>Hours path.</strong> The same screen shows Points bands and Hours bands; people assume one limit does double duty.",
+              fix: "<b>Hours:</b> bid + ask near mark. <b>Points:</b> single resting limit.",
+            },
+            {
+              heat: "warm",
+              q: "Do unfilled resting limits count for Maker?",
+              why: "<strong>Yes for Points (if near mark).</strong> A far-away TP-style limit can rest forever at 0%. Hours need active two-sided quotes.",
+              fix: "<b>Don't park</b> limits 5% away and expect credit.",
+            },
+          ],
+        },
+        {
+          id: "block",
+          tag: "04 · BLOCK OPTIONS",
+          note: "SIP-4",
+          items: [
+            {
+              heat: "warm",
+              q: "Is Block Options the same as Block Trade?",
+              why: "<strong>Different products.</strong> Block Trade = large matched print. Block Options = your TP/SL becomes a tradable right someone else can buy.",
+              fix: "<b>Block Options</b> = exit plan as an asset, not a size tier.",
+            },
+            {
+              heat: "cool",
+              q: "Can I sell my TP instead of waiting for price to hit?",
+              why: "<strong>SIP-4 logic.</strong> Reserve the right → hold it → execute or sell the right. It's not a trigger order — it's ownership of an exit.",
+              fix: "<b>Flow:</b> Set exit → Reserve → Hold → Execute / transfer.",
+            },
+          ],
+        },
+        {
+          id: "tpsl",
+          tag: "05 · TP / SL",
+          note: "mark price",
+          items: [
+            {
+              heat: "hot",
+              q: "Does TP/SL use mark or last?",
+              why: "<strong>Mark.</strong> When last trades through your level but mark hasn't, the stop looks 'broken'. This is the #1 TP/SL support thread.",
+              fix: "<b>Watch mark</b> on the chart, not the last print tape.",
+            },
+            {
+              heat: "warm",
+              q: "I set a stop, price passed — why didn't it fill?",
+              why: "<strong>Mark may not have crossed yet,</strong> or margin was too thin to spawn the close order. Liquidation path is separate from a resting stop.",
+              fix: "<b>Verify:</b> mark cross + free margin for the close leg.",
+            },
+            {
+              heat: "cool",
+              q: "Can I set multiple partial TPs?",
+              why: "<strong>Yes — independent legs.</strong> Up to 10 TP/SL per pair. OCO behavior: filling one can cancel its paired leg depending on setup.",
+              fix: "<b>Stack TPs</b> by size slices, not one giant exit.",
+            },
+          ],
+        },
+        {
+          id: "lev",
+          tag: "06 · LEVERAGE / LIQ",
+          note: "after the fact",
+          items: [
+            {
+              heat: "warm",
+              q: "Where do I set leverage?",
+              why: "<strong>EXECUTE panel, before submit.</strong> Leverage isn't retroactive. Most 'why liq' stories start with 20x+ chosen once and forgotten.",
+              fix: "<b>Set leverage first,</b> then size. Max 5x if you're farming, not gambling.",
+            },
+            {
+              heat: "warm",
+              q: "What does liq / backstop mean in my export?",
+              why: "<strong>Forced close.</strong> Mark moved against you faster than margin could absorb. Not a points issue — a risk ledger event.",
+              fix: "<b>Read export:</b> liq row = position gone, don't chase revenge trades.",
+            },
+          ],
+        },
+        {
+          id: "discord",
+          tag: "07 · DISCORD ≠ PERPS",
+          note: "separate scoreboard",
+          items: [
+            {
+              heat: "hot",
+              q: "I posted on Discord — why didn't I get +1 Engage?",
+              why: "<strong>Not automatic.</strong> Growth Path uses #task-submission and team review. Posting in chat ≠ credited task.",
+              fix: "<b>Submit</b> in the right channel with proof link.",
+            },
+            {
+              heat: "warm",
+              q: "Is Engage Point the same as standx.com/point?",
+              why: "<strong>No.</strong> Engage = Discord contribution track. standx.com/point = on-chain Perps campaigns (Maker / Holder). Different ledgers.",
+              fix: "<b>Don't optimize</b> Discord for Holder score or vice versa.",
+            },
+          ],
+        },
+      ];
+
+      const mapEl = document.getElementById("map");
+      const navEl = document.getElementById("nav");
+      const guide = document.getElementById("guide");
+      const guideMascot = document.getElementById("guideMascot");
+      const pointerLayer = document.getElementById("pointerLayer");
+      const stickLine = document.getElementById("stickLine");
+      const stickTip = document.getElementById("stickTip");
+      const stickHand = document.getElementById("stickHand");
+
+      let activeCrack = null;
+      const BEAM_LEN = 44;
+
+      function render() {
+        navEl.innerHTML = ZONES.map((z) =>
+          `<a href="#${z.id}">${z.tag.split("·")[1].trim()}</a>`
+        ).join("");
+
+        mapEl.innerHTML = ZONES.map((z) =>
+          `<section class="zone" id="${z.id}">` +
+          `<div class="zoneHead"><h2>${z.tag}</h2><em>${z.note}</em></div>` +
+          z.items.map((it, i) =>
+            `<article class="crack" data-zone="${z.id}" data-i="${i}" tabindex="0">` +
+            `<div class="answer">` +
+            `<p class="why">${it.why}</p>` +
+            `<p class="fix">${it.fix}</p>` +
+            `</div>` +
+            `<div class="crackHead">` +
+            `<p class="q">"${it.q}"</p>` +
+            `<span class="heat ${it.heat}">${it.heat}</span>` +
+            `</div>` +
+            `</article>`
+          ).join("") +
+          `</section>`
+        ).join("");
+
+        mapEl.querySelectorAll(".crack").forEach((el) => {
+          el.addEventListener("pointerenter", onEnter);
+          el.addEventListener("pointerleave", onLeave);
+          el.addEventListener("focus", onEnter);
+          el.addEventListener("blur", onLeave);
+          el.addEventListener("click", onTap);
+        });
+      }
+
+      function onTap(e) {
+        if (!window.matchMedia("(max-width: 720px)").matches) return;
+        const el = e.currentTarget;
+        const was = el.classList.contains("lit");
+        mapEl.querySelectorAll(".crack.lit").forEach((c) => c.classList.remove("lit"));
+        if (!was) el.classList.add("lit");
+      }
+
+      function onEnter(e) {
+        const el = e.currentTarget;
+        if (window.matchMedia("(max-width: 720px)").matches) {
+          mapEl.querySelectorAll(".crack.lit").forEach((c) => c.classList.remove("lit"));
+          el.classList.add("lit");
+          return;
+        }
+        activeCrack = el;
+        el.classList.add("lit");
+        positionGuide(el);
+        guide.classList.add("show");
+        pointerLayer.classList.add("show");
+      }
+
+      function onLeave(e) {
+        const el = e.currentTarget;
+        el.classList.remove("lit");
+        if (activeCrack === el) {
+          activeCrack = null;
+          guide.classList.remove("show");
+          pointerLayer.classList.remove("show");
+        }
+      }
+
+      function positionGuide(el) {
+        const r = el.getBoundingClientRect();
+        const gw = 210;
+        const gh = 130;
+        const pad = 32;
+        const vw = window.innerWidth;
+
+        let onRight = true;
+        let left = r.right + pad;
+        if (left + gw > vw - 12) {
+          left = r.left - gw - pad;
+          onRight = false;
+        }
+        if (left < 12) left = 12;
+
+        const top = Math.min(
+          Math.max(r.top - gh * 0.2, 12),
+          window.innerHeight - gh - 12
+        );
+
+        guide.style.left = left + "px";
+        guide.style.top = top + "px";
+        guideMascot.classList.toggle("flip", onRight);
+
+        requestAnimationFrame(() => {
+          const hand = stickHand.getBoundingClientRect();
+          const hx = hand.left + hand.width / 2;
+          const hy = hand.top + hand.height / 2;
+
+          // tip sits just above the card edge — away from answer text
+          const targetX = onRight ? r.left + 24 : r.right - 24;
+          const targetY = r.top - 6;
+
+          const dx = targetX - hx;
+          const dy = targetY - hy;
+          const dist = Math.hypot(dx, dy) || 1;
+          const ux = dx / dist;
+          const uy = dy / dist;
+          const len = Math.min(BEAM_LEN, dist);
+          const startX = targetX - ux * len;
+          const startY = targetY - uy * len;
+
+          stickLine.setAttribute("x1", String(startX));
+          stickLine.setAttribute("y1", String(startY));
+          stickLine.setAttribute("x2", String(targetX));
+          stickLine.setAttribute("y2", String(targetY));
+          stickTip.setAttribute("cx", String(targetX));
+          stickTip.setAttribute("cy", String(targetY));
+          stickTip.setAttribute("r", "4");
+        });
+      }
+
+      window.addEventListener("scroll", () => {
+        if (activeCrack && guide.classList.contains("show")) positionGuide(activeCrack);
+      }, { passive: true });
+
+      window.addEventListener("resize", () => {
+        if (activeCrack && guide.classList.contains("show")) positionGuide(activeCrack);
+      });
+
+      const obs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((en) => {
+            if (en.isIntersecting) {
+              navEl.querySelectorAll("a").forEach((a) =>
+                a.classList.toggle("on", a.getAttribute("href") === "#" + en.target.id)
+              );
+            }
+          });
+        },
+        { rootMargin: "-30% 0px -55% 0px" }
+      );
+
+      render();
+      document.querySelectorAll(".zone").forEach((z) => obs.observe(z));
+    </script>
+  </body>
+</html>
