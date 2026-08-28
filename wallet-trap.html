@@ -1,0 +1,1598 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a0f0d" />
+    <title>Wallet Trap — StandX sim</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #0a0f0d;
+        --panel: #111916;
+        --ink: #f2f8f4;
+        --dim: #9ab0a4;
+        --line: #1e2e28;
+        --green: #2ee27a;
+        --red: #ef5a68;
+        --amber: #e8b84a;
+        --coin: #1a9f55;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; overflow: hidden; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Inter, system-ui, sans-serif;
+        line-height: 1.4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px;
+      }
+      .wrap {
+        width: min(680px, 100%);
+        max-height: calc(100dvh - 16px);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+      .shell {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #0c1210;
+        overflow: hidden;
+        box-shadow: 0 16px 48px #00000055;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      .shellTop {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--line);
+        background: #0a100d;
+        flex-shrink: 0;
+      }
+      .shellTop b {
+        font: 600 11px "IBM Plex Mono", monospace;
+        letter-spacing: 0.08em;
+        color: var(--green);
+      }
+      .shellTopRight { display: flex; align-items: center; gap: 8px; }
+      .shellTop span { font: 500 10px "IBM Plex Mono", monospace; color: var(--dim); }
+      .welcome {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(135deg, #0a1410, #0d1210);
+        flex-shrink: 0;
+      }
+      .welcome img {
+        width: 84px;
+        height: 84px;
+        object-fit: contain;
+        flex-shrink: 0;
+      }
+      .welcomeText h1 {
+        margin: 0 0 6px;
+        font-size: clamp(1.15rem, 4vw, 1.5rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.25;
+        color: var(--ink);
+      }
+      .welcomeText p {
+        margin: 0;
+        font-size: clamp(0.88rem, 2.8vw, 1rem);
+        color: var(--dim);
+        line-height: 1.5;
+        font-weight: 500;
+      }
+      .welcomeText .tag {
+        display: inline-block;
+        margin-top: 6px;
+        font: 600 9px "IBM Plex Mono", monospace;
+        letter-spacing: 0.06em;
+        color: var(--green);
+        border: 1px solid #2ee27a44;
+        padding: 3px 8px;
+        border-radius: 999px;
+      }
+      .langs { display: flex; gap: 3px; }
+      .langs button {
+        font: 600 9px "IBM Plex Mono", monospace;
+        padding: 3px 6px;
+        border-radius: 5px;
+        border: 1px solid var(--line);
+        background: transparent;
+        color: var(--dim);
+        cursor: pointer;
+      }
+      .langs button.on { color: var(--green); border-color: var(--green); }
+      .hud {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1px;
+        background: var(--line);
+        border-bottom: 1px solid var(--line);
+        flex-shrink: 0;
+      }
+      .hudCell {
+        background: #0d1411;
+        padding: 6px 8px;
+        text-align: center;
+      }
+      .hudCell label {
+        display: block;
+        font: 600 8px "IBM Plex Mono", monospace;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--dim);
+        margin-bottom: 2px;
+      }
+      .hudCell output {
+        font: 700 14px "IBM Plex Mono", monospace;
+      }
+      .hudCell output.good { color: var(--green); }
+      .hudCell output.bad { color: var(--red); }
+      .hudCell output.short { color: var(--red); }
+      .main { flex: 1; min-height: 0; overflow: hidden; position: relative; }
+      .stage { padding: 10px 12px 12px; height: 100%; position: relative; }
+      .stage.introPhase {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 150px;
+        gap: 10px;
+        align-items: start;
+      }
+      .stage.introPhase .intro { grid-column: 1; }
+      .stage.introPhase .mmDock { position: static; grid-column: 2; width: 150px; }
+      .stage:not(.introPhase) .mmDock {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        width: 150px;
+        z-index: 50;
+      }
+      .mmPanel {
+        background: #121314;
+        border: 1px solid #2a2d30;
+        border-radius: 10px;
+        overflow: hidden;
+        font-size: 10px;
+        box-shadow: 0 8px 24px #00000066;
+      }
+      .mmHead {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 8px;
+        background: #1a1d1f;
+        border-bottom: 1px solid #2a2d30;
+      }
+      .mmFox {
+        width: 18px; height: 18px;
+        border-radius: 5px;
+        background: linear-gradient(135deg, #e2761b, #f6851b);
+        display: grid; place-items: center;
+        font-size: 10px;
+      }
+      .mmHead b { font-size: 9px; color: #fff; display: block; }
+      .mmHead span { font: 500 8px "IBM Plex Mono", monospace; color: #9aa0a6; }
+      .mmBody { padding: 6px 8px 8px; }
+      .mmRow { display: flex; justify-content: space-between; padding: 4px 0; }
+      .mmTok { display: flex; align-items: center; gap: 4px; font-weight: 600; color: #e8eaed; }
+      .mmTok i {
+        width: 14px; height: 14px; border-radius: 50%;
+        background: var(--green); display: grid; place-items: center;
+        font: 700 7px "IBM Plex Mono", monospace; color: #0a0f0d; font-style: normal;
+      }
+      .mmBal { font: 600 10px "IBM Plex Mono", monospace; color: #fff; }
+      .mmNote {
+        margin: 4px 0 0; padding: 4px 6px; border-radius: 5px;
+        background: #1a1d1f; border: 1px solid #333;
+        font: 500 8px "IBM Plex Mono", monospace; color: var(--amber); line-height: 1.3;
+      }
+      .mmTx {
+        position: fixed; inset: 0; background: #000000aa;
+        display: none; align-items: center; justify-content: center;
+        z-index: 400; padding: 12px;
+      }
+      .mmTx.show { display: flex; }
+      .mmCard {
+        width: min(300px, 100%);
+        background: #121314; border: 1px solid #2a2d30;
+        border-radius: 14px; overflow: hidden;
+      }
+      .mmCardHead { padding: 12px; text-align: center; border-bottom: 1px solid #2a2d30; }
+      .mmCardHead h3 { margin: 0 0 4px; font-size: 13px; color: #fff; }
+      .mmCardBody { padding: 12px; }
+      .mmLine { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px; color: #c4c7cc; }
+      .mmWarn {
+        font: 500 9px "IBM Plex Mono", monospace; color: var(--amber);
+        background: #1a1508; border: 1px solid #e8b84a44;
+        padding: 6px 8px; border-radius: 6px; line-height: 1.35;
+      }
+      .mmActions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px 12px 12px; border-top: 1px solid #2a2d30; }
+      .mmActions button { padding: 10px; border-radius: 8px; font: 700 11px Inter, sans-serif; cursor: pointer; border: none; }
+      .mmReject { background: #2a2d30; color: #fff; }
+      .mmConfirm { background: #f6851b; color: #121314; }
+      .intro { text-align: center; }
+      .introInner {
+        max-width: 380px; margin: 0 auto;
+        padding: 22px 18px; border: 1px solid var(--line);
+        border-radius: 12px; background: #0d1411;
+      }
+      .intro h1 { font-size: 1.2rem; margin: 0 0 6px; letter-spacing: -0.02em; line-height: 1.25; }
+      .intro p { color: var(--dim); margin: 0 0 16px; font-size: 13px; }
+      .mintBtn {
+        font: 700 12px "IBM Plex Mono", monospace;
+        padding: 12px 24px; border-radius: 8px;
+        border: 2px solid var(--green); background: #2ee27a18;
+        color: var(--green); cursor: pointer;
+      }
+      .mintBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+      .sim { display: none; height: 100%; }
+      .sim.show { display: flex; flex-direction: column; gap: 8px; }
+      .intro.hide { display: none; }
+      .simGrid {
+        display: grid;
+        grid-template-columns: 1fr 200px;
+        gap: 8px;
+        flex: 1;
+        min-height: 0;
+      }
+      .chartBox {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      .chartTop {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+        margin-bottom: 4px;
+      }
+      .chartTop span { font: 500 10px "IBM Plex Mono", monospace; color: var(--dim); }
+      .chartTop b { font: 600 10px "IBM Plex Mono", monospace; color: var(--dim); }
+      .chartTop b { font: 600 10px "IBM Plex Mono", monospace; color: var(--dim); }
+      #chart { width: 100%; height: 120px; display: block; border-radius: 6px; background: #080c0a; }
+      .chartPrices {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        margin-top: 6px;
+      }
+      .pxCell {
+        background: #0a100d;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 4px 6px;
+        text-align: center;
+        opacity: 0.45;
+      }
+      .pxCell.on { opacity: 1; }
+      .pxCell span {
+        display: block;
+        font: 600 7px "IBM Plex Mono", monospace;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--dim);
+        margin-bottom: 2px;
+      }
+      .pxCell output {
+        font: 700 11px "IBM Plex Mono", monospace;
+        color: var(--ink);
+      }
+      .pxCell.mark output { color: var(--amber); }
+      .pxCell.entry.on output { color: var(--green); }
+      .pxCell.entry.on.short output { color: var(--red); }
+      .pxCell.liq.on output { color: var(--red); }
+      .pxCell.sl.on output { color: #e8a04a; }
+      .wallets {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        min-height: 0;
+      }
+      .zone {
+        background: var(--panel);
+        border: 2px solid var(--line);
+        border-radius: 10px;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        min-height: 88px;
+        position: relative;
+        transition: border-color 0.2s, opacity 0.2s;
+      }
+      .zone.locked { opacity: 0.35; pointer-events: none; }
+      .zone.active { border-color: var(--amber); }
+      .zone.over { border-color: #2ee27a88; background: #2ee27a06; }
+      .zone.done { border-color: #2ee27a55; }
+      .zoneHead { font: 600 8px "IBM Plex Mono", monospace; color: var(--dim); text-transform: uppercase; }
+      .zoneTitle { font: 700 12px; margin: 1px 0 4px; color: var(--ink); }
+      .bal { font: 600 15px "IBM Plex Mono", monospace; color: var(--green); }
+      .bal span { font-size: 9px; color: var(--dim); }
+      .slot {
+        flex: 1; min-height: 36px;
+        border: 1px dashed #2e3e36; border-radius: 6px;
+        display: flex; align-items: center; justify-content: center;
+        margin-top: 4px;
+      }
+      .zone.over .slot { border-color: #2ee27a66; }
+      .tradeBox {
+        grid-column: 1 / -1;
+        background: var(--panel);
+        border: 2px solid var(--line);
+        border-radius: 10px;
+        padding: 8px;
+      }
+      .tradeBox.ready { border-color: var(--green); }
+      .tradeBox.done { border-color: var(--green); background: #0a1410; }
+      .tradeBox.locked button { pointer-events: none; opacity: 0.42; cursor: not-allowed; }
+      .sideRow, .levRow, .pairRow { display: flex; gap: 4px; margin-bottom: 6px; }
+      .sideRow button, .levRow button, .pairRow button {
+        flex: 1;
+        padding: 7px 4px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        background: #0d1411;
+        color: var(--dim);
+        font: 700 10px "IBM Plex Mono", monospace;
+        cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.15s;
+      }
+      .sideRow button:hover:not(:disabled),
+      .levRow button:hover:not(:disabled),
+      .pairRow button:hover:not(:disabled) {
+        transform: scale(1.1);
+        box-shadow: 0 4px 14px #00000055;
+        z-index: 2;
+        position: relative;
+      }
+      .pairRow button.on {
+        border-color: var(--green);
+        color: var(--green);
+        background: #2ee27a14;
+      }
+      .sideRow button.on.long { border-color: var(--green); color: var(--green); background: #2ee27a12; }
+      .sideRow button.on.short { border-color: var(--red); color: var(--red); background: #ef5a6812; }
+      .levRow button.on { border-color: var(--amber); color: var(--amber); background: #e8b84a12; }
+      .levRow button.warn.on { border-color: #e8a04a; color: #e8a04a; background: #e8a04a15; }
+      .levRow button.danger.on { border-color: var(--red); color: var(--red); background: #ef5a6818; }
+      .levRow { flex-wrap: wrap; }
+      .levRow button { min-width: calc(16.66% - 4px); flex: 1 1 auto; }
+      .levRow button:disabled { opacity: 0.3; cursor: not-allowed; }
+      .execBtn {
+        width: 100%; padding: 10px;
+        border-radius: 7px; border: 2px solid var(--line);
+        background: #0d1411; color: var(--dim);
+        font: 700 10px "IBM Plex Mono", monospace;
+        cursor: not-allowed;
+      }
+      .execBtn.ready { border-color: var(--green); color: var(--green); background: #2ee27a15; cursor: pointer; }
+      .execBtn.done { border-color: var(--green); background: var(--green); color: #0a0f0d; }
+      .closeBtn {
+        display: none;
+        width: 100%;
+        padding: 10px;
+        margin-top: 4px;
+        border-radius: 7px;
+        border: 2px solid var(--amber);
+        background: #e8b84a18;
+        color: var(--amber);
+        font: 700 10px "IBM Plex Mono", monospace;
+        cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+      }
+      .closeBtn.show { display: block; }
+      .closeBtn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 14px #00000055;
+      }
+      .coin {
+        width: 52px; height: 52px; border-radius: 50%;
+        background: radial-gradient(circle at 32% 28%, #3dff9a, var(--coin) 45%, #0d5a32);
+        border: 2px solid #2ee27a88;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        cursor: grab; touch-action: none; user-select: none;
+      }
+      .coin.dragging { transform: scale(1.06); }
+      .coin.hidden { opacity: 0; pointer-events: none; }
+      .coin b { font: 700 10px "IBM Plex Mono", monospace; color: #fff; }
+      .coin small { font: 600 7px "IBM Plex Mono", monospace; color: #fffc; }
+      .coin.fly {
+        position: fixed; pointer-events: none; z-index: 200;
+        transition: left 0.5s ease, top 0.5s ease, transform 0.5s;
+      }
+      .status {
+        font-size: 12px; padding: 10px 12px;
+        border-radius: 8px; border-left: 3px solid var(--red);
+        background: #12080a; border: 1px solid #5a2030;
+        flex-shrink: 0;
+        color: var(--ink);
+        line-height: 1.5;
+      }
+      .status.ok { border-color: #2ee27a44; border-left-color: var(--green); background: #0a1410; }
+      .status.shake { animation: shake 0.4s ease; }
+      .transferBar {
+        display: none; padding: 8px 10px;
+        border: 1px solid #2ee27a44; border-radius: 8px;
+        background: #0a1410; align-items: center; justify-content: space-between; gap: 8px;
+        flex-shrink: 0;
+      }
+      .transferBar.show { display: flex; }
+      .transferBar p { margin: 0; font: 500 10px "IBM Plex Mono", monospace; color: var(--dim); }
+      .transferBar button {
+        font: 700 10px "IBM Plex Mono", monospace;
+        padding: 6px 10px; border-radius: 6px;
+        border: 1px solid var(--green); background: var(--green); color: #0a0f0d; cursor: pointer;
+      }
+      .win {
+        display: none; padding: 12px; text-align: center;
+        border: 1px solid #2ee27a44; border-radius: 10px; background: #0a1410;
+        flex-shrink: 0;
+      }
+      .win.show { display: block; }
+      .win h2 { margin: 0 0 4px; color: var(--green); font-size: 1rem; }
+      .win p { margin: 0 0 8px; color: var(--dim); font-size: 11px; }
+      .win button {
+        font: 600 10px "IBM Plex Mono", monospace;
+        padding: 7px 12px; border-radius: 6px;
+        border: 1px solid var(--green); background: transparent; color: var(--green); cursor: pointer; margin: 0 3px;
+      }
+      .toast {
+        position: fixed; bottom: 12px; left: 50%;
+        transform: translateX(-50%) translateY(60px);
+        padding: 8px 12px; border-radius: 6px;
+        border: 1px solid #ef5a6844; background: #12080eee;
+        color: var(--red); font: 600 10px "IBM Plex Mono", monospace;
+        opacity: 0; transition: 0.25s; z-index: 300; pointer-events: none;
+      }
+      .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+      .liqOverlay {
+        position: fixed; inset: 0; z-index: 500;
+        background: #000000cc;
+        display: none; align-items: center; justify-content: center;
+        padding: 16px;
+      }
+      .liqOverlay.show { display: flex; animation: pop 0.35s ease; }
+      .liqCard {
+        width: min(340px, 100%);
+        background: #12080a;
+        border: 2px solid var(--red);
+        border-radius: 14px;
+        padding: 22px 20px;
+        text-align: center;
+        box-shadow: 0 0 48px #ef5a6844;
+      }
+      .liqCard img { width: 64px; height: 64px; object-fit: contain; margin-bottom: 10px; opacity: 0.85; }
+      .liqCard h2 { margin: 0 0 8px; color: var(--red); font-size: 1.35rem; letter-spacing: -0.02em; }
+      .liqCard p { margin: 0 0 16px; color: var(--dim); font: 500 12px "IBM Plex Mono", monospace; line-height: 1.45; }
+      .liqCard button {
+        font: 700 11px "IBM Plex Mono", monospace;
+        padding: 10px 20px; border-radius: 8px;
+        border: 1px solid var(--red); background: var(--red); color: #fff; cursor: pointer;
+      }
+      .slOverlay {
+        position: fixed; inset: 0; z-index: 500;
+        background: #000000cc;
+        display: none; align-items: center; justify-content: center;
+        padding: 16px;
+      }
+      .slOverlay.show { display: flex; animation: pop 0.35s ease; }
+      .slCard {
+        width: min(340px, 100%);
+        background: #121008;
+        border: 2px solid var(--amber);
+        border-radius: 14px;
+        padding: 22px 20px;
+        text-align: center;
+        box-shadow: 0 0 48px #e8b84a44;
+      }
+      .slCard img { width: 64px; height: 64px; object-fit: contain; margin-bottom: 10px; opacity: 0.85; }
+      .slCard h2 { margin: 0 0 8px; color: var(--amber); font-size: 1.35rem; letter-spacing: -0.02em; }
+      .slCard p { margin: 0 0 16px; color: var(--dim); font: 500 12px "IBM Plex Mono", monospace; line-height: 1.45; }
+      .slCard button {
+        font: 700 11px "IBM Plex Mono", monospace;
+        padding: 10px 20px; border-radius: 8px;
+        border: 1px solid var(--amber); background: var(--amber); color: #0a0f0d; cursor: pointer;
+      }
+      @keyframes pop {
+        from { opacity: 0; transform: scale(0.92); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      footer {
+        flex-shrink: 0; margin-top: 6px;
+        font: 500 10px "IBM Plex Mono", monospace; color: var(--dim); text-align: center;
+      }
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+      }
+      @media (max-width: 600px) {
+        body { overflow: auto; align-items: flex-start; }
+        html, body { overflow: auto; }
+        .welcome { flex-direction: column; text-align: center; padding: 12px; }
+        .welcome img { width: 64px; height: 64px; }
+        .chartPrices { grid-template-columns: repeat(2, 1fr); }
+        .simGrid { grid-template-columns: 1fr; }
+        .stage:not(.introPhase) .mmDock { position: static; width: 100%; margin-bottom: 6px; }
+        .stage.introPhase { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toast" id="toast"></div>
+    <div class="liqOverlay" id="liqOverlay" role="alertdialog" aria-modal="true">
+      <div class="liqCard">
+        <img src="images/stander-fluid.png" alt="Stander" />
+        <h2 data-i="liqTitle">Kaybettiniz</h2>
+        <p id="liqDetail"></p>
+        <button type="button" id="liqAgain" data-i="againBtn">Tekrar</button>
+      </div>
+    </div>
+    <div class="slOverlay" id="slOverlay" role="alertdialog" aria-modal="true">
+      <div class="slCard">
+        <img src="images/stander-fluid.png" alt="Stander" />
+        <h2 data-i="slTitle">Stop loss</h2>
+        <p id="slDetail"></p>
+        <button type="button" id="slAgain" data-i="againBtn">Tekrar</button>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="shell">
+        <div class="welcome" id="welcome">
+          <img src="images/stander-fluid.png" alt="Stander" id="mascotImg" />
+          <div class="welcomeText">
+            <h1 data-i="welcomeTitle">StandX Perps simülasyonuna hoş geldiniz</h1>
+            <p data-i="welcomeSub">Cash · Perps · grafik · kaldıraç — kişisel sim, resmi değil.</p>
+            <span class="tag" data-i="welcomeTag">paper sim · not investment advice</span>
+          </div>
+        </div>
+        <div class="shellTop">
+          <b data-i="shellTitle">WALLET TRAP</b>
+          <div class="shellTopRight">
+            <span data-i="shellSub">long/short · lev · chart</span>
+            <div class="langs" role="tablist">
+              <button type="button" data-lang="tr" class="on">TR</button>
+              <button type="button" data-lang="en">EN</button>
+              <button type="button" data-lang="zh">中文</button>
+            </div>
+          </div>
+        </div>
+        <div class="hud">
+          <div class="hudCell"><label data-i="hudTime">Time</label><output id="hudTime">—</output></div>
+          <div class="hudCell"><label data-i="hudErr">Err</label><output id="hudErr" class="bad">0</output></div>
+          <div class="hudCell"><label data-i="hudSide">Side</label><output id="hudSide" class="short">—</output></div>
+          <div class="hudCell"><label data-i="hudLev">Lev</label><output id="hudLev">—</output></div>
+          <div class="hudCell"><label data-i="hudPnl">PnL</label><output id="hudPnl">—</output></div>
+        </div>
+        <div class="main">
+          <div class="stage introPhase" id="stage">
+            <div class="mmDock" id="mmDock">
+              <div class="mmPanel" id="mmPanel">
+                <div class="mmHead">
+                  <div class="mmFox">🦊</div>
+                  <div><b>MetaMask</b><span id="mmAddr">0x762E…6c8E</span></div>
+                </div>
+                <div class="mmBody">
+                  <div class="mmRow"><span class="mmTok"><i>D</i> DUSD</span><span class="mmBal" id="mmBal">0</span></div>
+                  <p class="mmNote" id="mmNote" data-i="mmNoteDefault">on-chain · not app bucket</p>
+                </div>
+              </div>
+            </div>
+            <div class="mmTx" id="mmTx" role="dialog" aria-modal="true">
+              <div class="mmCard">
+                <div class="mmCardHead"><h3 data-i="mmTxTitle">Confirm</h3></div>
+                <div class="mmCardBody">
+                  <div class="mmLine"><span data-i="mmLineAction">Action</span><b id="mmTxAction"></b></div>
+                  <div class="mmLine"><span data-i="mmLineAmount">Amount</span><b id="mmTxAmt"></b></div>
+                  <p class="mmWarn" id="mmTxWarn"></p>
+                </div>
+                <div class="mmActions">
+                  <button type="button" class="mmReject" id="mmReject" data-i="mmReject">Reject</button>
+                  <button type="button" class="mmConfirm" id="mmConfirm" data-i="mmConfirm">Confirm</button>
+                </div>
+              </div>
+            </div>
+            <div class="intro" id="intro">
+              <div class="introInner">
+                <h1 data-i="introTitle">DUSD mintledin. Trade yok. Long veya short işlemi alacaksınız.</h1>
+                <p data-i="introLede">Cash → Perps → long/short · 1x–20x · liq’e dikkat.</p>
+                <button type="button" class="mintBtn" id="mintBtn" data-i="continueBtn">Devam</button>
+              </div>
+            </div>
+            <div class="sim" id="sim">
+              <div class="simGrid">
+                <div class="chartBox">
+                  <div class="chartTop"><b id="chartPair">ETH</b><span data-i="chartPerp"> · perp</span></div>
+                  <canvas id="chart" width="420" height="120"></canvas>
+                  <div class="chartPrices">
+                    <div class="pxCell mark on">
+                      <span data-i="legMark">mark</span>
+                      <output id="pxMark">2476.7</output>
+                    </div>
+                    <div class="pxCell entry" id="pxEntryCell">
+                      <span data-i="legEntry">entry</span>
+                      <output id="pxEntry">—</output>
+                    </div>
+                    <div class="pxCell liq" id="pxLiqCell">
+                      <span data-i="legLiq">liq</span>
+                      <output id="pxLiq">—</output>
+                    </div>
+                    <div class="pxCell sl" id="pxSlCell">
+                      <span data-i="legSl">sl</span>
+                      <output id="pxSl">—</output>
+                    </div>
+                  </div>
+                </div>
+                <div class="wallets">
+                  <div class="zone active" id="cash" data-drop="cash">
+                    <div class="zoneHead" data-i="z1Head">Cash</div>
+                    <div class="zoneTitle" data-i="z1Title">Cash</div>
+                    <div class="bal" id="cashBal">0 <span>DUSD</span></div>
+                    <div class="slot" id="cashSlot"></div>
+                  </div>
+                  <div class="zone locked" id="perps" data-drop="perps">
+                    <div class="zoneHead" data-i="z2Head">Perps</div>
+                    <div class="zoneTitle" data-i="z2Title">Perps</div>
+                    <div class="bal" id="perpsBal">0 <span>DUSD</span></div>
+                    <div class="slot" id="perpsSlot"></div>
+                  </div>
+                  <div class="tradeBox locked" id="tradeBox">
+                    <div class="pairRow" id="pairRow">
+                      <button type="button" class="pairBtn" data-pair="BTC">BTC</button>
+                      <button type="button" class="pairBtn on" data-pair="ETH">ETH</button>
+                      <button type="button" class="pairBtn" data-pair="ZEC">ZEC</button>
+                    </div>
+                    <div class="sideRow">
+                      <button type="button" class="sideBtn" data-side="long" data-i="sideLong">Long</button>
+                      <button type="button" class="sideBtn on short" data-side="short" data-i="sideShort">Short</button>
+                    </div>
+                    <div class="levRow" id="levRow">
+                      <button type="button" class="levBtn" data-lev="1">1x</button>
+                      <button type="button" class="levBtn on" data-lev="2">2x</button>
+                      <button type="button" class="levBtn" data-lev="3">3x</button>
+                      <button type="button" class="levBtn" data-lev="5">5x</button>
+                      <button type="button" class="levBtn warn" data-lev="10">10x</button>
+                      <button type="button" class="levBtn danger" data-lev="20">20x</button>
+                    </div>
+                    <button type="button" class="execBtn" id="execBtn" disabled data-i="execLocked">LOCKED</button>
+                    <button type="button" class="closeBtn" id="closeBtn" data-i="closeBtn">KAPAT</button>
+                  </div>
+                </div>
+              </div>
+              <div class="status" id="status"></div>
+              <div class="transferBar" id="transferBar">
+                <p data-i="xferLabel">Cash → Perps · 100 DUSD</p>
+                <button type="button" id="confirmXfer" data-i="xferBtn">Confirm</button>
+              </div>
+              <div class="win" id="win">
+                <h2 id="winTitle" data-i="winTitle">Trap beat.</h2>
+                <p id="winDetail"></p>
+                <button type="button" id="again" data-i="againBtn">Again</button>
+                <button type="button" id="breakLink" data-i="breakBtn">Break map</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer data-i="foot">Not official · Not investment advice · 1x–20x paper sim</footer>
+    </div>
+    <script>
+      const I18N = {
+        tr: {
+          welcomeTitle: "StandX Perps simülasyonuna hoş geldiniz",
+          welcomeSub: "Cash · Perps · grafik · kaldıraç — kişisel sim, resmi StandX değil.",
+          welcomeTag: "kâğıt sim · yatırım tavsiyesi değil",
+          shellTitle: "WALLET TRAP", shellSub: "long/short · lev · grafik",
+          hudTime: "Süre", hudErr: "Hata", hudSide: "Yön", hudLev: "Lev", hudPnl: "PnL",
+          mmNoteDefault: "zincir · app bucket değil",
+          mmTxTitle: "Onayla", mmLineAction: "İşlem", mmLineAmount: "Tutar", mmReject: "Reddet", mmConfirm: "Onayla",
+          introTitle: "DUSD mintledin. Trade yok. Long veya short işlemi alacaksınız.",
+          introLede: "Cash → Perps → long/short · 1x–20x · liq’e dikkat.",
+          continueBtn: "Devam",
+          legMark: "mark", legEntry: "giriş", legLiq: "liq", legSl: "sl",
+          z1Head: "Cash", z1Title: "Cash Wallet", z2Head: "Perps", z2Title: "Perps Wallet",
+          sideLong: "Long", sideShort: "Short",
+          execLocked: "KİLİTLİ", execReady: "AÇ", execDone: "AÇIK ✓",
+          closeBtn: "İŞLEMİ KAPAT",
+          xferLabel: "Cash → Perps · 100 DUSD", xferBtn: "Onayla",
+          winTitle: "Tuzak geçildi.", againBtn: "Tekrar", breakBtn: "Kırılma haritası",
+          liqTitle: "Kaybettiniz",
+          liqDetail: "{side} {lev}x · liq {liq} · −{loss} DUSD kâğıt",
+          slTitle: "Stop loss tetiklendi",
+          slDetail: "{side} {lev}x · sl {sl} · {pnl} DUSD kâğıt",
+          closeWinTitle: "Pozisyon kapandı — kâr",
+          closeLossTitle: "Pozisyon kapandı — zarar",
+          closeDetail: "{side} {lev}x · {pnl} DUSD kâğıt · {time}s",
+          foot: "Resmi değil · Yatırım tavsiyesi değil · 1x–20x kâğıt sim",
+          statusTrap: "<strong>Tuzak:</strong> Para Cash’te. Perps boş. Long/short için önce transfer.",
+          statusConfirm: "<strong>Transferi onayla.</strong> MM değişmez — sadece bucket.",
+          statusReady: "<strong>Hazır.</strong> Long/short + lev seç · entry/sl/liq altta.",
+          statusWin: "<strong>Pozisyon açık.</strong> SL veya liq’e dikkat · altta kapat.",
+          statusClosed: "<strong>Kapandı.</strong> Yeni işlem için long/short + lev seç.",
+          statusSl: "<strong>Stop loss.</strong> Pozisyon SL fiyatında kapandı.",
+          statusLiq: "<strong>Likidite.</strong> Pozisyon kapandı — kaybettiniz.",
+          statusReset: "<strong>Baştan:</strong> Cash’te mint · Perps boş.",
+          toastWrongDrop: "Perps’e bırak", toastNoPerps: "Önce Perps doldur",
+          mmNoteMint: "100 DUSD ✓ — trade yok", mmNoteXfer: "100 DUSD — app Perps taşıdı",
+          mintAction: "DUSD Mint", mintAmount: "100 DUSD",
+          mintWarn: "MM’de <b>100</b> görünür · app’te <b>Cash</b> — Perps 0.",
+          xferAction: "İç transfer", xferAmount: "Cash → Perps · 100",
+          xferWarn: "<b>Zincir tx yok.</b> MM 100 kalır — tuzak bu.",
+          winDetail: "{side} {lev}x · {pnl} DUSD kâğıt · {time}s · {m} hata",
+          hudLong: "LONG", hudShort: "SHORT",
+          coinLabel: "100 DUSD sürükle",
+          voiceWelcome: "StandX Perps simülasyonuna hoş geldiniz",
+          voiceLiq: "Likidite oldunuz. Kaybettiniz.",
+          chartPerp: " · perp",
+          bubbleWelcome: "StandX Perps simülasyonuna hoş geldiniz!",
+          bubbleTrap: "Para Cash’te — önce Perps’e transfer.",
+          bubbleReady: "Long/short + parite + lev · entry/liq altta.",
+          bubbleOpen: "Pozisyon açık — liq’e dikkat!",
+          bubbleLiq: "Likidite — kaybettiniz.",
+          bubblePair: "{pair} seçildi · mark canlı.",
+        },
+        en: {
+          welcomeTitle: "Welcome to the StandX Perps simulation",
+          welcomeSub: "Cash · Perps · chart · leverage — personal sim, not official StandX.",
+          welcomeTag: "paper sim · not investment advice",
+          shellTitle: "WALLET TRAP", shellSub: "long/short · lev · chart",
+          hudTime: "Time", hudErr: "Err", hudSide: "Side", hudLev: "Lev", hudPnl: "PnL",
+          mmNoteDefault: "on-chain · not app bucket",
+          mmTxTitle: "Confirm", mmLineAction: "Action", mmLineAmount: "Amount", mmReject: "Reject", mmConfirm: "Confirm",
+          introTitle: "You minted. Can't trade. You'll take a long or short.",
+          introLede: "Cash → Perps → long/short · 1x–20x · watch liq.",
+          continueBtn: "Continue",
+          legMark: "mark", legEntry: "entry", legLiq: "liq", legSl: "sl",
+          z1Head: "Cash", z1Title: "Cash Wallet", z2Head: "Perps", z2Title: "Perps Wallet",
+          sideLong: "Long", sideShort: "Short",
+          execLocked: "LOCKED", execReady: "OPEN", execDone: "OPEN ✓",
+          closeBtn: "CLOSE POSITION",
+          xferLabel: "Cash → Perps · 100 DUSD", xferBtn: "Confirm",
+          winTitle: "Trap beat.", againBtn: "Again", breakBtn: "Break map",
+          liqTitle: "You lost",
+          liqDetail: "{side} {lev}x · liq {liq} · −{loss} DUSD paper",
+          slTitle: "Stop loss hit",
+          slDetail: "{side} {lev}x · sl {sl} · {pnl} DUSD paper",
+          closeWinTitle: "Closed — profit",
+          closeLossTitle: "Closed — loss",
+          closeDetail: "{side} {lev}x · {pnl} DUSD paper · {time}s",
+          foot: "Not official · Not investment advice · 1x–20x paper sim",
+          statusTrap: "<strong>Trap:</strong> Funds in Cash. Perps empty. Transfer first to trade long/short.",
+          statusConfirm: "<strong>Confirm transfer.</strong> MM unchanged — buckets only.",
+          statusReady: "<strong>Ready.</strong> Pick long/short + lev · entry/sl/liq below.",
+          statusWin: "<strong>Position open.</strong> Watch SL & liq · close below.",
+          statusClosed: "<strong>Closed.</strong> Pick long/short + lev for a new trade.",
+          statusSl: "<strong>Stop loss.</strong> Position closed at SL price.",
+          statusLiq: "<strong>Liquidated.</strong> Position closed — you lost.",
+          statusReset: "<strong>Reset:</strong> Mint in Cash · Perps empty.",
+          toastWrongDrop: "Drop on Perps", toastNoPerps: "Fund Perps first",
+          mmNoteMint: "100 DUSD ✓ — still can't trade", mmNoteXfer: "100 DUSD — app moved Perps",
+          mintAction: "Mint DUSD", mintAmount: "100 DUSD",
+          mintWarn: "MM shows <b>100</b> · app lands in <b>Cash</b> — Perps 0.",
+          xferAction: "Internal transfer", xferAmount: "Cash → Perps · 100",
+          xferWarn: "<b>No chain tx.</b> MM stays 100 — that's the trap.",
+          winDetail: "{side} {lev}x · {pnl} DUSD paper · {time}s · {m} mistake{pl}",
+          hudLong: "LONG", hudShort: "SHORT",
+          coinLabel: "Drag 100 DUSD",
+          voiceWelcome: "Welcome to the StandX Perps simulation",
+          voiceLiq: "Liquidated. You lost.",
+          chartPerp: " · perp",
+          bubbleWelcome: "Welcome to the StandX Perps simulation!",
+          bubbleTrap: "Funds in Cash — transfer to Perps first.",
+          bubbleReady: "Long/short + pair + lev · entry/liq below.",
+          bubbleOpen: "Position open — watch liq!",
+          bubbleLiq: "Liquidated — you lost.",
+          bubblePair: "{pair} selected · live mark.",
+        },
+        zh: {
+          welcomeTitle: "欢迎来到 StandX 永续模拟",
+          welcomeSub: "Cash · Perps · 图表 · 杠杆 — 个人模拟，非官方 StandX。",
+          welcomeTag: "纸面模拟 · 非投资建议",
+          shellTitle: "WALLET TRAP", shellSub: "多/空 · 杠杆 · 图表",
+          hudTime: "时间", hudErr: "失误", hudSide: "方向", hudLev: "杠杆", hudPnl: "盈亏",
+          mmNoteDefault: "链上 · 非 app 分桶",
+          mmTxTitle: "确认", mmLineAction: "操作", mmLineAmount: "数量", mmReject: "拒绝", mmConfirm: "确认",
+          introTitle: "已 mint。不能交易。你将做多或做空。",
+          introLede: "Cash → Perps → 做多/做空 · 1x–20x · 注意强平。",
+          continueBtn: "继续",
+          legMark: "标记", legEntry: "入场", legLiq: "强平", legSl: "止损",
+          z1Head: "Cash", z1Title: "Cash 钱包", z2Head: "Perps", z2Title: "Perps 钱包",
+          sideLong: "做多", sideShort: "做空",
+          execLocked: "锁定", execReady: "开仓", execDone: "已开 ✓",
+          closeBtn: "平仓",
+          xferLabel: "Cash → Perps · 100 DUSD", xferBtn: "确认",
+          winTitle: "陷阱已破。", againBtn: "再来", breakBtn: "摩擦地图",
+          liqTitle: "你输了",
+          liqDetail: "{side} {lev}x · 强平 {liq} · −{loss} DUSD 纸面",
+          slTitle: "止损触发",
+          slDetail: "{side} {lev}x · 止损 {sl} · {pnl} DUSD 纸面",
+          closeWinTitle: "已平仓 — 盈利",
+          closeLossTitle: "已平仓 — 亏损",
+          closeDetail: "{side} {lev}x · {pnl} DUSD 纸面 · {time}秒",
+          foot: "非官方 · 非投资建议 · 1x–20x 纸面模拟",
+          statusTrap: "<strong>陷阱：</strong>资金在 Cash。Perps 空。做多/做空前先转账。",
+          statusConfirm: "<strong>确认转账。</strong>MM 不变 — 只有分桶。",
+          statusReady: "<strong>就绪。</strong>选多/空 + 杠杆 · 下方入场/止损/强平价。",
+          statusWin: "<strong>仓位已开。</strong>注意止损和强平 · 下方可平仓。",
+          statusClosed: "<strong>已平。</strong>重新选择多/空 + 杠杆开新仓。",
+          statusSl: "<strong>止损。</strong>仓位在止损价平仓。",
+          statusLiq: "<strong>已强平。</strong>仓位关闭 — 你输了。",
+          statusReset: "<strong>重置：</strong>Mint 在 Cash · Perps 空。",
+          toastWrongDrop: "放到 Perps", toastNoPerps: "先注资 Perps",
+          mmNoteMint: "100 DUSD ✓ — 仍不能交易", mmNoteXfer: "100 DUSD — app 动了 Perps",
+          mintAction: "Mint DUSD", mintAmount: "100 DUSD",
+          mintWarn: "MM 显示 <b>100</b> · app 落入 <b>Cash</b> — Perps 为 0。",
+          xferAction: "内部转账", xferAmount: "Cash → Perps · 100",
+          xferWarn: "<b>无链上 tx。</b>MM 仍为 100 — 陷阱在此。",
+          winDetail: "{side} {lev}x · {pnl} DUSD 纸面 · {time}秒 · {m} 次失误",
+          hudLong: "多", hudShort: "空",
+          coinLabel: "拖动 100 DUSD",
+          voiceWelcome: "欢迎来到 StandX 永续模拟",
+          voiceLiq: "已强平。你输了。",
+          chartPerp: " · 永续",
+          bubbleWelcome: "欢迎来到 StandX 永续模拟！",
+          bubbleTrap: "资金在 Cash — 先转到 Perps。",
+          bubbleReady: "选多/空 + 交易对 + 杠杆 · 下方入场/强平价。",
+          bubbleOpen: "仓位已开 — 注意强平！",
+          bubbleLiq: "已强平 — 你输了。",
+          bubblePair: "已选 {pair} · 标记价 live。",
+        },
+      };
+
+      let lang = "tr";
+      function t(k) { return I18N[lang][k] ?? I18N.en[k] ?? k; }
+      function tf(k, vars) {
+        let s = t(k);
+        Object.keys(vars).forEach((key) => { s = s.replace("{" + key + "}", vars[key]); });
+        return s;
+      }
+
+      const AMOUNT = 100;
+      const SL_RATIO = 0.5;
+      const PAIRS = {
+        BTC: { mark: 97250.5, vol: 95 },
+        ETH: { mark: 2476.7, vol: 1.4 },
+        ZEC: { mark: 42.85, vol: 0.09 },
+      };
+
+      const state = {
+        phase: "intro",
+        pair: "ETH",
+        cash: 0, perps: 0, chain: 0,
+        mistakes: 0, t0: 0, raf: 0,
+        pendingXfer: false,
+        side: "short", leverage: 2,
+        mark: PAIRS.ETH.mark, entry: 0, liq: 0, sl: 0,
+        open: false, pnl: 0, liquidated: false, slHit: false,
+      };
+
+      const history = Array(70).fill(PAIRS.ETH.mark);
+      let coinEl = null, drag = null, chartIv = null;
+      const dropZones = ["cash", "perps"];
+
+      const els = {
+        stage: document.getElementById("stage"),
+        intro: document.getElementById("intro"),
+        sim: document.getElementById("sim"),
+        mintBtn: document.getElementById("mintBtn"),
+        status: document.getElementById("status"),
+        cashBal: document.getElementById("cashBal"),
+        perpsBal: document.getElementById("perpsBal"),
+        cashSlot: document.getElementById("cashSlot"),
+        perpsSlot: document.getElementById("perpsSlot"),
+        perps: document.getElementById("perps"),
+        cash: document.getElementById("cash"),
+        tradeBox: document.getElementById("tradeBox"),
+        execBtn: document.getElementById("execBtn"),
+        closeBtn: document.getElementById("closeBtn"),
+        transferBar: document.getElementById("transferBar"),
+        confirmXfer: document.getElementById("confirmXfer"),
+        win: document.getElementById("win"),
+        winDetail: document.getElementById("winDetail"),
+        toast: document.getElementById("toast"),
+        hudTime: document.getElementById("hudTime"),
+        hudErr: document.getElementById("hudErr"),
+        hudSide: document.getElementById("hudSide"),
+        hudLev: document.getElementById("hudLev"),
+        hudPnl: document.getElementById("hudPnl"),
+        pxMark: document.getElementById("pxMark"),
+        pxEntry: document.getElementById("pxEntry"),
+        pxLiq: document.getElementById("pxLiq"),
+        pxEntryCell: document.getElementById("pxEntryCell"),
+        pxLiqCell: document.getElementById("pxLiqCell"),
+        pxSl: document.getElementById("pxSl"),
+        pxSlCell: document.getElementById("pxSlCell"),
+        chart: document.getElementById("chart"),
+        mmBal: document.getElementById("mmBal"),
+        mmNote: document.getElementById("mmNote"),
+        mmPanel: document.getElementById("mmPanel"),
+        mmTx: document.getElementById("mmTx"),
+        mmTxAction: document.getElementById("mmTxAction"),
+        mmTxAmt: document.getElementById("mmTxAmt"),
+        mmTxWarn: document.getElementById("mmTxWarn"),
+        mmConfirm: document.getElementById("mmConfirm"),
+        mmReject: document.getElementById("mmReject"),
+        liqOverlay: document.getElementById("liqOverlay"),
+        liqDetail: document.getElementById("liqDetail"),
+        liqAgain: document.getElementById("liqAgain"),
+        slOverlay: document.getElementById("slOverlay"),
+        slDetail: document.getElementById("slDetail"),
+        slAgain: document.getElementById("slAgain"),
+        winTitle: document.getElementById("winTitle"),
+        chartPair: document.getElementById("chartPair"),
+      };
+
+      function fmtPx(n) {
+        if (state.pair === "ZEC") return n.toFixed(2);
+        if (state.pair === "BTC") return n.toFixed(1);
+        return n.toFixed(1);
+      }
+
+      function setPair(pair) {
+        if (state.open || state.pair === pair) return;
+        state.pair = pair;
+        state.mark = PAIRS[pair].mark;
+        history.fill(state.mark);
+        els.chartPair.textContent = pair;
+        document.querySelectorAll(".pairBtn").forEach((b) => b.classList.toggle("on", b.dataset.pair === pair));
+        drawChart();
+        render();
+      }
+
+      let mmPending = null;
+
+      function speechLang() {
+        return lang === "tr" ? "tr-TR" : lang === "zh" ? "zh-CN" : "en-US";
+      }
+
+      function speak(key) {
+        if (!window.speechSynthesis) return;
+        const text = t(key === "welcome" ? "voiceWelcome" : "voiceLiq");
+        if (!text) return;
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = speechLang();
+        u.rate = 0.92;
+        u.pitch = 1;
+        speechSynthesis.speak(u);
+      }
+
+      function isLiqHit() {
+        if (!state.open || state.liquidated) return false;
+        return state.side === "short" ? state.mark >= state.liq : state.mark <= state.liq;
+      }
+
+      function triggerLiquidation() {
+        if (state.liquidated) return;
+        state.liquidated = true;
+        state.open = false;
+        state.pnl = -AMOUNT * 0.92;
+        state.phase = "liq";
+        cancelAnimationFrame(state.raf);
+        els.win.classList.remove("show");
+        els.closeBtn.classList.remove("show");
+        const sideLabel = state.side === "short" ? t("hudShort") : t("hudLong");
+        els.liqDetail.textContent = tf("liqDetail", {
+          side: sideLabel,
+          lev: state.leverage,
+          liq: fmtPx(state.liq),
+          loss: (AMOUNT * 0.92).toFixed(1),
+        });
+        els.liqOverlay.classList.add("show");
+        setStatus(t("statusLiq"), false);
+        els.hudPnl.textContent = state.pnl.toFixed(2);
+        els.hudPnl.className = "bad";
+        speak("liq");
+        render();
+      }
+
+      function liqPrice(entry, side, lev) {
+        const pct = 0.88 / lev;
+        return side === "short" ? entry * (1 + pct) : entry * (1 - pct);
+      }
+
+      function slPrice(entry, side, lev) {
+        const pct = (0.88 / lev) * SL_RATIO;
+        return side === "short" ? entry * (1 + pct) : entry * (1 - pct);
+      }
+
+      function isSlHit() {
+        if (!state.open || state.liquidated || state.slHit) return false;
+        return state.side === "short" ? state.mark >= state.sl : state.mark <= state.sl;
+      }
+
+      function calcPnl() {
+        if (!state.open) return 0;
+        const notional = AMOUNT * state.leverage;
+        const diff = state.side === "short" ? state.entry - state.mark : state.mark - state.entry;
+        return (diff / state.entry) * notional;
+      }
+
+      function previewEntry() {
+        if (state.open) return state.entry;
+        if (state.perps > 0) return state.mark;
+        return null;
+      }
+
+      function previewLiq() {
+        const entry = previewEntry();
+        if (entry == null) return null;
+        return state.open ? state.liq : liqPrice(entry, state.side, state.leverage);
+      }
+
+      function previewSl() {
+        const entry = previewEntry();
+        if (entry == null) return null;
+        return state.open ? state.sl : slPrice(entry, state.side, state.leverage);
+      }
+
+      function unlockTradeAfterClose() {
+        els.closeBtn.classList.remove("show");
+        els.execBtn.disabled = false;
+        els.execBtn.classList.remove("done");
+        els.execBtn.classList.add("ready");
+        els.execBtn.textContent = execLabel();
+        els.tradeBox.classList.remove("done");
+        els.tradeBox.classList.add("ready");
+        document.querySelectorAll(".sideBtn, .levBtn, .pairBtn").forEach((b) => { b.disabled = false; });
+        state.entry = 0;
+        state.liq = 0;
+        state.sl = 0;
+      }
+
+      function sideLabel() {
+        return state.side === "short" ? t("hudShort") : t("hudLong");
+      }
+
+      function elapsedSec() {
+        return ((performance.now() - state.t0) / 1000).toFixed(1);
+      }
+
+      function closePosition(reason) {
+        if (!state.open) return;
+        state.pnl = calcPnl();
+        state.open = false;
+        state.phase = "play";
+        state.perps = Math.max(0, AMOUNT + state.pnl);
+        unlockTradeAfterClose();
+        if (reason === "manual") {
+          els.winTitle.textContent = state.pnl >= 0 ? t("closeWinTitle") : t("closeLossTitle");
+          els.winDetail.textContent = tf("closeDetail", {
+            side: sideLabel(),
+            lev: state.leverage,
+            pnl: (state.pnl >= 0 ? "+" : "") + state.pnl.toFixed(2),
+            time: elapsedSec(),
+          });
+          els.win.classList.add("show");
+          setStatus(t("statusClosed"), state.pnl >= 0);
+        }
+        drawChart();
+        render();
+      }
+
+      function triggerStopLoss() {
+        if (state.slHit || state.liquidated) return;
+        state.slHit = true;
+        state.pnl = calcPnl();
+        state.open = false;
+        state.phase = "play";
+        state.perps = Math.max(0, AMOUNT + state.pnl);
+        unlockTradeAfterClose();
+        els.slDetail.textContent = tf("slDetail", {
+          side: sideLabel(),
+          lev: state.leverage,
+          sl: fmtPx(state.sl),
+          pnl: state.pnl.toFixed(2),
+        });
+        els.slOverlay.classList.add("show");
+        setStatus(t("statusSl"), false);
+        els.hudPnl.textContent = state.pnl.toFixed(2);
+        els.hudPnl.className = "bad";
+        render();
+      }
+
+      function updatePriceDisplay() {
+        els.pxMark.textContent = fmtPx(state.mark);
+        const entry = previewEntry();
+        const liq = previewLiq();
+        const sl = previewSl();
+        els.pxEntry.textContent = entry != null ? fmtPx(entry) : "—";
+        els.pxLiq.textContent = liq != null ? fmtPx(liq) : "—";
+        els.pxSl.textContent = sl != null ? fmtPx(sl) : "—";
+        els.pxEntryCell.classList.toggle("on", entry != null);
+        els.pxEntryCell.classList.toggle("short", entry != null && state.side === "short");
+        els.pxLiqCell.classList.toggle("on", liq != null);
+        els.pxSlCell.classList.toggle("on", sl != null);
+      }
+
+      function drawLineLabel(ctx, label, price, yPos, color, w, h) {
+        const txt = label + " " + fmtPx(price);
+        ctx.font = '600 9px "IBM Plex Mono", monospace';
+        const tw = ctx.measureText(txt).width;
+        let ty = yPos - 4;
+        if (ty < 10) ty = yPos + 12;
+        if (ty > h - 4) ty = h - 4;
+        ctx.fillStyle = "#080c0acc";
+        ctx.fillRect(w - tw - 10, ty - 9, tw + 6, 11);
+        ctx.fillStyle = color;
+        ctx.textAlign = "right";
+        ctx.fillText(txt, w - 4, ty);
+      }
+
+      function drawChart() {
+        const ctx = els.chart.getContext("2d");
+        const w = els.chart.width, h = els.chart.height;
+        const pad = 8;
+        const entry = previewEntry();
+        const liq = previewLiq();
+        const sl = previewSl();
+        let lo = Math.min(...history), hi = Math.max(...history);
+        if (entry != null && liq != null && sl != null) {
+          lo = Math.min(lo, entry, liq, sl);
+          hi = Math.max(hi, entry, liq, sl);
+        }
+        lo -= 3; hi += 3;
+        const y = (p) => pad + (hi - p) / (hi - lo) * (h - pad * 2);
+        ctx.fillStyle = "#080c0a";
+        ctx.fillRect(0, 0, w, h);
+        ctx.strokeStyle = "#1e2e28";
+        ctx.lineWidth = 1;
+        for (let i = 1; i < 4; i++) {
+          const gy = pad + (i / 4) * (h - pad * 2);
+          ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
+        }
+        ctx.strokeStyle = "#2ee27a88";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        history.forEach((p, i) => {
+          const x = (i / (history.length - 1)) * w;
+          i === 0 ? ctx.moveTo(x, y(p)) : ctx.lineTo(x, y(p));
+        });
+        ctx.stroke();
+        const markY = y(state.mark);
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = "#e8b84a";
+        ctx.beginPath();
+        ctx.moveTo(0, markY);
+        ctx.lineTo(w, markY);
+        ctx.stroke();
+        drawLineLabel(ctx, "M", state.mark, markY, "#e8b84a", w, h);
+        if (entry != null) {
+          const entryY = y(entry);
+          ctx.setLineDash(state.open ? [] : [5, 4]);
+          ctx.strokeStyle = state.side === "short" ? "#ef5a68" : "#2ee27a";
+          ctx.lineWidth = state.open ? 1.5 : 1;
+          ctx.beginPath();
+          ctx.moveTo(0, entryY);
+          ctx.lineTo(w, entryY);
+          ctx.stroke();
+          drawLineLabel(ctx, "E", entry, entryY, state.side === "short" ? "#ef5a68" : "#2ee27a", w, h);
+        }
+        if (liq != null) {
+          const liqY = y(liq);
+          ctx.setLineDash([3, 3]);
+          ctx.strokeStyle = "#ef5a68";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, liqY);
+          ctx.lineTo(w, liqY);
+          ctx.stroke();
+          drawLineLabel(ctx, "L", liq, liqY, "#ef5a68", w, h);
+        }
+        if (sl != null) {
+          const slY = y(sl);
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = "#e8a04a";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, slY);
+          ctx.lineTo(w, slY);
+          ctx.stroke();
+          drawLineLabel(ctx, "S", sl, slY, "#e8a04a", w, h);
+        }
+        ctx.setLineDash([]);
+        updatePriceDisplay();
+      }
+
+      function tickChart() {
+        if (state.liquidated) return;
+        const bias = state.open && state.side === "short" ? 0.02 : state.open && state.side === "long" ? -0.02 : 0;
+        const vol = PAIRS[state.pair].vol * (1 + state.leverage * 0.04);
+        state.mark += (Math.random() - 0.5 + bias) * vol;
+        history.push(state.mark);
+        history.shift();
+        if (state.open) {
+          state.pnl = calcPnl();
+          if (isSlHit()) {
+            triggerStopLoss();
+            drawChart();
+            return;
+          }
+          if (isLiqHit()) {
+            triggerLiquidation();
+            drawChart();
+            return;
+          }
+        }
+        drawChart();
+        render();
+      }
+
+      function startChart() {
+        if (chartIv) return;
+        chartIv = setInterval(tickChart, 400);
+      }
+
+      function stopChart() {
+        clearInterval(chartIv);
+        chartIv = null;
+      }
+
+      function mmUpdate() { els.mmBal.textContent = state.chain; }
+      function mmSetNote(text) { els.mmNote.textContent = text; }
+      function mmPulse() {
+        els.mmPanel.classList.remove("mmPulse");
+        void els.mmPanel.offsetWidth;
+        els.mmPanel.classList.add("mmPulse");
+      }
+      function mmOpenTx(opts, cb) {
+        els.mmTxAction.textContent = opts.action;
+        els.mmTxAmt.textContent = opts.amount;
+        els.mmTxWarn.innerHTML = opts.warn;
+        mmPending = cb;
+        els.mmTx.classList.add("show");
+      }
+      function mmCloseTx() { els.mmTx.classList.remove("show"); mmPending = null; }
+
+      els.mmConfirm.addEventListener("click", () => { if (mmPending) mmPending(); mmCloseTx(); });
+      els.mmReject.addEventListener("click", () => {
+        mmCloseTx();
+        if (state.phase === "intro") els.mintBtn.disabled = false;
+      });
+
+      function fmt(n) { return n + " <span>DUSD</span>"; }
+      function toast(msg) {
+        els.toast.textContent = msg;
+        els.toast.classList.add("show");
+        setTimeout(() => els.toast.classList.remove("show"), 2000);
+      }
+      function setStatus(html, ok) {
+        els.status.innerHTML = html;
+        els.status.classList.toggle("ok", !!ok);
+      }
+      function shake(el) {
+        el.classList.remove("shake");
+        void el.offsetWidth;
+        el.classList.add("shake");
+      }
+
+      function execLabel() {
+        if (state.open) return t("execDone");
+        if (state.perps <= 0) return t("execLocked");
+        const side = state.side === "short" ? "SHORT" : "LONG";
+        return side + " " + state.leverage + "x · " + t("execReady");
+      }
+
+      function render() {
+        els.cashBal.innerHTML = fmt(state.cash);
+        els.perpsBal.innerHTML = fmt(state.perps);
+        els.hudErr.textContent = state.mistakes;
+        els.hudSide.textContent = state.side === "short" ? t("hudShort") : t("hudLong");
+        els.hudSide.className = state.side === "short" ? "short" : "good";
+        els.hudLev.textContent = state.open || state.perps > 0 ? state.leverage + "x" : "—";
+        if (state.open) {
+          const p = state.pnl;
+          els.hudPnl.textContent = (p >= 0 ? "+" : "") + p.toFixed(2);
+          els.hudPnl.className = p >= 0 ? "good" : "bad";
+        } else {
+          els.hudPnl.textContent = "—";
+          els.hudPnl.className = "";
+        }
+        if (state.phase === "play" && state.perps > 0 && !state.open) {
+          els.execBtn.textContent = execLabel();
+        }
+      }
+
+      function applyLang() {
+        document.documentElement.lang = lang;
+        document.querySelectorAll("[data-i]").forEach((el) => {
+          const k = el.dataset.i;
+          if (typeof I18N[lang][k] === "string") el.textContent = I18N[lang][k];
+        });
+        if (state.phase === "intro") setStatus(t("statusTrap"), false);
+        else if (state.pendingXfer) setStatus(t("statusConfirm"), false);
+        else if (state.liquidated) setStatus(t("statusLiq"), false);
+        else if (state.slHit) setStatus(t("statusSl"), false);
+        else if (state.open) setStatus(t("statusWin"), true);
+        else if (state.perps > 0) setStatus(t("statusReady"), true);
+        else if (state.phase === "play") setStatus(t("statusTrap"), false);
+        document.querySelectorAll(".langs button").forEach((b) => b.classList.toggle("on", b.dataset.lang === lang));
+        if (!state.open && state.perps > 0) els.execBtn.textContent = execLabel();
+        if (state.liquidated && state.liq) {
+          const sideLabel = state.side === "short" ? t("hudShort") : t("hudLong");
+          els.liqDetail.textContent = tf("liqDetail", {
+            side: sideLabel,
+            lev: state.leverage,
+            liq: fmtPx(state.liq),
+            loss: (AMOUNT * 0.92).toFixed(1),
+          });
+        }
+        render();
+        speak("welcome");
+      }
+
+      function tick() {
+        if (state.phase === "play" || state.phase === "open") {
+          els.hudTime.textContent = ((performance.now() - state.t0) / 1000).toFixed(1) + "s";
+          state.raf = requestAnimationFrame(tick);
+        }
+      }
+
+      function makeCoin(parent) {
+        if (coinEl) coinEl.remove();
+        if (state.cash <= 0) return;
+        coinEl = document.createElement("div");
+        coinEl.className = "coin";
+        coinEl.innerHTML = "<b>100</b><small>DUSD</small>";
+        coinEl.setAttribute("aria-label", t("coinLabel"));
+        parent.appendChild(coinEl);
+        bindCoin(coinEl);
+      }
+
+      function zoneAt(x, y) {
+        return dropZones.map((id) => document.getElementById(id)).find((z) => {
+          const r = z.getBoundingClientRect();
+          return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+        });
+      }
+
+      function bindCoin(el) {
+        el.addEventListener("pointerdown", (e) => {
+          if (state.phase !== "play" || state.pendingXfer || state.cash <= 0) return;
+          drag = { el, ox: e.clientX, oy: e.clientY, moved: false, float: null };
+          el.setPointerCapture(e.pointerId);
+          el.classList.add("dragging");
+        });
+        el.addEventListener("pointermove", (e) => {
+          if (!drag || drag.el !== el) return;
+          const dx = e.clientX - drag.ox, dy = e.clientY - drag.oy;
+          if (!drag.moved && Math.hypot(dx, dy) < 5) return;
+          if (!drag.moved) {
+            drag.moved = true;
+            drag.float = el.cloneNode(true);
+            drag.float.classList.add("dragging");
+            const r = el.getBoundingClientRect();
+            drag.float.style.cssText = "position:fixed;left:" + r.left + "px;top:" + r.top + "px;z-index:200";
+            document.body.appendChild(drag.float);
+            el.classList.add("hidden");
+          }
+          drag.float.style.left = e.clientX - 26 + "px";
+          drag.float.style.top = e.clientY - 26 + "px";
+          dropZones.forEach((id) => document.getElementById(id).classList.remove("over"));
+          const hit = zoneAt(e.clientX, e.clientY);
+          if (hit) hit.classList.add("over");
+        });
+        el.addEventListener("pointerup", (e) => {
+          if (!drag || drag.el !== el) return;
+          el.releasePointerCapture(e.pointerId);
+          el.classList.remove("dragging");
+          dropZones.forEach((id) => document.getElementById(id).classList.remove("over"));
+          if (drag.float) drag.float.remove();
+          const hit = zoneAt(e.clientX, e.clientY);
+          if (hit && hit.id === "perps" && state.cash > 0) {
+            el.classList.add("hidden");
+            state.pendingXfer = true;
+            els.transferBar.classList.add("show");
+            setStatus(t("statusConfirm"), false);
+          } else if (drag.moved && hit?.id !== "cash") {
+            state.mistakes++;
+            shake(els.status);
+            toast(t("toastWrongDrop"));
+            el.classList.remove("hidden");
+            render();
+          } else {
+            el.classList.remove("hidden");
+          }
+          drag = null;
+        });
+      }
+
+      document.querySelectorAll(".pairBtn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (state.open) return;
+          setPair(btn.dataset.pair);
+        });
+      });
+
+      document.querySelectorAll(".sideBtn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (state.open) return;
+          state.side = btn.dataset.side;
+          document.querySelectorAll(".sideBtn").forEach((b) => {
+            b.classList.toggle("on", b === btn);
+            b.classList.toggle("long", b.dataset.side === "long" && b.classList.contains("on"));
+            b.classList.toggle("short", b.dataset.side === "short" && b.classList.contains("on"));
+          });
+          render();
+          drawChart();
+        });
+      });
+
+      document.querySelectorAll(".levBtn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          if (state.open) return;
+          state.leverage = +btn.dataset.lev;
+          document.querySelectorAll(".levBtn").forEach((b) => b.classList.toggle("on", b === btn));
+          render();
+          drawChart();
+        });
+      });
+
+      els.mintBtn.addEventListener("click", () => {
+        els.mintBtn.disabled = true;
+        mmOpenTx({ action: t("mintAction"), amount: t("mintAmount"), warn: t("mintWarn") }, startSim);
+      });
+
+      function startSim() {
+        state.phase = "play";
+        state.t0 = performance.now();
+        state.chain = AMOUNT;
+        state.cash = AMOUNT;
+        mmUpdate();
+        mmSetNote(t("mmNoteMint"));
+        mmPulse();
+        els.stage.classList.remove("introPhase");
+        els.intro.classList.add("hide");
+        els.sim.classList.add("show");
+        els.perps.classList.remove("locked");
+        els.cash.classList.add("active");
+        makeCoin(els.cashSlot);
+        startChart();
+        setStatus(t("statusTrap"), false);
+        tick();
+        render();
+      }
+
+      els.confirmXfer.addEventListener("click", () => {
+        if (!state.pendingXfer) return;
+        mmOpenTx({ action: t("xferAction"), amount: t("xferAmount"), warn: t("xferWarn") }, () => {
+          state.pendingXfer = false;
+          state.cash = 0;
+          state.perps = AMOUNT;
+          els.transferBar.classList.remove("show");
+          mmSetNote(t("mmNoteXfer"));
+          mmPulse();
+          els.cash.classList.add("done");
+          els.cash.classList.remove("active");
+          els.perps.classList.add("done", "active");
+          els.tradeBox.classList.remove("locked");
+          els.tradeBox.classList.add("ready");
+          els.execBtn.disabled = false;
+          els.execBtn.classList.add("ready");
+          els.execBtn.textContent = execLabel();
+          if (coinEl) coinEl.remove();
+          setStatus(t("statusReady"), true);
+          drawChart();
+          render();
+        });
+      });
+
+      els.execBtn.addEventListener("click", () => {
+        if (state.perps <= 0) {
+          state.mistakes++;
+          toast(t("toastNoPerps"));
+          shake(els.tradeBox);
+          render();
+          return;
+        }
+        if (state.open) return;
+        state.open = true;
+        state.entry = state.mark;
+        state.liq = liqPrice(state.entry, state.side, state.leverage);
+        state.sl = slPrice(state.entry, state.side, state.leverage);
+        els.execBtn.classList.remove("ready");
+        els.execBtn.classList.add("done");
+        els.execBtn.textContent = t("execDone");
+        els.closeBtn.classList.add("show");
+        els.tradeBox.classList.add("done");
+        document.querySelectorAll(".sideBtn, .levBtn, .pairBtn").forEach((b) => { b.disabled = true; });
+        drawChart();
+        setStatus(t("statusWin"), true);
+        state.phase = "open";
+        render();
+      });
+
+      els.closeBtn.addEventListener("click", () => closePosition("manual"));
+
+      document.getElementById("again").addEventListener("click", reset);
+      els.liqAgain.addEventListener("click", reset);
+      els.slAgain.addEventListener("click", reset);
+      document.getElementById("breakLink").addEventListener("click", () => {
+        location.href = "/break";
+      });
+
+      function reset() {
+        stopChart();
+        cancelAnimationFrame(state.raf);
+        Object.assign(state, {
+          phase: "intro", pair: "ETH", cash: 0, perps: 0, chain: 0, mistakes: 0, t0: 0,
+          pendingXfer: false, side: "short", leverage: 2,
+          mark: PAIRS.ETH.mark, entry: 0, liq: 0, sl: 0, open: false, pnl: 0, liquidated: false, slHit: false,
+        });
+        speechSynthesis?.cancel();
+        els.liqOverlay.classList.remove("show");
+        els.slOverlay.classList.remove("show");
+        history.fill(PAIRS.ETH.mark);
+        state.mark = PAIRS.ETH.mark;
+        els.chartPair.textContent = "ETH";
+        document.querySelectorAll(".pairBtn").forEach((b) => b.classList.toggle("on", b.dataset.pair === "ETH"));
+        els.stage.classList.add("introPhase");
+        els.intro.classList.remove("hide");
+        els.sim.classList.remove("show");
+        els.win.classList.remove("show");
+        els.transferBar.classList.remove("show");
+        els.mintBtn.disabled = false;
+        els.pxEntry.textContent = "—";
+        els.pxLiq.textContent = "—";
+        els.pxSl.textContent = "—";
+        els.pxEntryCell.classList.remove("on", "short");
+        els.pxLiqCell.classList.remove("on");
+        els.pxSlCell.classList.remove("on");
+        els.closeBtn.classList.remove("show");
+        els.cash.classList.remove("done", "active");
+        els.cash.classList.add("active");
+        els.perps.classList.add("locked");
+        els.perps.classList.remove("done", "active", "over");
+        els.tradeBox.classList.add("locked");
+        els.tradeBox.classList.remove("ready", "done");
+        els.execBtn.disabled = true;
+        els.execBtn.classList.remove("ready", "done");
+        els.execBtn.textContent = t("execLocked");
+        document.querySelectorAll(".sideBtn, .levBtn, .pairBtn").forEach((b) => { b.disabled = false; });
+        document.querySelectorAll(".levBtn").forEach((b) => b.classList.toggle("on", b.dataset.lev === "2"));
+        document.querySelectorAll(".sideBtn").forEach((b) => {
+          b.classList.toggle("on", b.dataset.side === "short");
+          b.classList.toggle("short", b.dataset.side === "short");
+          b.classList.toggle("long", false);
+        });
+        els.hudTime.textContent = "—";
+        els.hudLev.textContent = "—";
+        els.hudPnl.textContent = "—";
+        els.pxMark.textContent = fmtPx(PAIRS.ETH.mark);
+        mmCloseTx();
+        mmUpdate();
+        mmSetNote(t("mmNoteDefault"));
+        if (coinEl) coinEl.remove();
+        drawChart();
+        setStatus(t("statusReset"), false);
+        render();
+      }
+
+      document.querySelectorAll(".langs button").forEach((btn) => {
+        btn.addEventListener("click", () => { lang = btn.dataset.lang; applyLang(); });
+      });
+
+      drawChart();
+      applyLang();
+    </script>
+  </body>
+</html>
