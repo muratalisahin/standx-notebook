@@ -2,7 +2,7 @@
 <html lang="tr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#0a0f0d" />
     <title>Wallet Trap — StandX sim</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -526,14 +526,112 @@
         75% { transform: translateX(5px); }
       }
       @media (max-width: 600px) {
-        body { overflow: auto; align-items: flex-start; }
-        html, body { overflow: auto; }
-        .welcome { flex-direction: column; text-align: center; padding: 12px; }
-        .welcome img { width: 64px; height: 64px; }
+        html, body {
+          height: auto;
+          min-height: 100dvh;
+          overflow-x: hidden;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        body {
+          align-items: stretch;
+          padding:
+            max(8px, env(safe-area-inset-top))
+            max(8px, env(safe-area-inset-right))
+            max(8px, env(safe-area-inset-bottom))
+            max(8px, env(safe-area-inset-left));
+        }
+        .wrap {
+          max-height: none;
+          width: 100%;
+        }
+        .shell {
+          overflow: visible;
+          border-radius: 10px;
+        }
+        .main {
+          overflow: visible;
+          flex: none;
+        }
+        .stage {
+          height: auto;
+          padding: 8px 10px 12px;
+        }
+        .stage:not(.introPhase) {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .stage:not(.introPhase) .mmDock {
+          position: static;
+          width: 100%;
+          order: -1;
+          margin-bottom: 0;
+        }
+        .sim {
+          height: auto;
+        }
+        .sim.show {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .welcome {
+          flex-direction: row;
+          text-align: left;
+          padding: 12px;
+          gap: 10px;
+        }
+        .welcome img { width: 56px; height: 56px; }
+        .welcomeText h1 { font-size: 1rem; }
+        .welcomeText p { font-size: 0.82rem; }
+        .shellTop {
+          flex-wrap: wrap;
+          gap: 6px;
+          padding: 8px 10px;
+        }
+        .shellTopRight {
+          width: 100%;
+          justify-content: space-between;
+        }
+        .shellTop span[data-i="shellSub"] { display: none; }
+        .hudCell { padding: 8px 4px; }
+        .hudCell output { font-size: 11px; }
+        .hudCell label { font-size: 7px; }
         .chartPrices { grid-template-columns: repeat(2, 1fr); }
-        .simGrid { grid-template-columns: 1fr; }
-        .stage:not(.introPhase) .mmDock { position: static; width: 100%; margin-bottom: 6px; }
+        .pxCell output { font-size: 10px; }
+        .simGrid { grid-template-columns: 1fr; gap: 8px; }
+        .wallets { gap: 8px; }
+        .zone { min-height: 96px; padding: 10px; }
+        .coin { width: 56px; height: 56px; }
+        .sideRow button, .levRow button, .pairRow button,
+        .execBtn, .closeBtn, .mintBtn, .transferBar button {
+          min-height: 44px;
+          padding: 10px 6px;
+          font-size: 11px;
+          touch-action: manipulation;
+        }
+        .levRow button { min-width: calc(33.33% - 4px); }
+        .langs button { min-height: 32px; padding: 6px 10px; }
+        .status { font-size: 11px; padding: 8px 10px; }
+        .transferBar { flex-wrap: wrap; gap: 8px; }
+        .transferBar button { flex-shrink: 0; }
+        .intro h1 { font-size: 1.05rem; }
+        .introInner { padding: 0 4px; }
         .stage.introPhase { grid-template-columns: 1fr; }
+        .stage.introPhase .mmDock { width: 100%; grid-column: 1; order: -1; }
+        .mmTx, .liqOverlay, .slOverlay {
+          padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+        }
+      }
+      @media (max-width: 600px) and (hover: none) {
+        .sideRow button:hover:not(:disabled),
+        .levRow button:hover:not(:disabled),
+        .pairRow button:hover:not(:disabled),
+        .closeBtn:hover {
+          transform: none;
+          box-shadow: none;
+        }
       }
     </style>
   </head>
@@ -1138,6 +1236,18 @@
         ctx.fillText(txt, w - 4, ty);
       }
 
+      function resizeChart() {
+        const box = els.chart.parentElement;
+        if (!box) return;
+        const w = Math.max(260, box.clientWidth);
+        const h = window.matchMedia("(max-width:600px)").matches ? 96 : 120;
+        if (els.chart.width !== w || els.chart.height !== h) {
+          els.chart.width = w;
+          els.chart.height = h;
+        }
+        drawChart();
+      }
+
       function drawChart() {
         const ctx = els.chart.getContext("2d");
         const w = els.chart.width, h = els.chart.height;
@@ -1391,9 +1501,12 @@
           const hit = zoneAt(e.clientX, e.clientY);
           if (hit) hit.classList.add("over");
         });
-        el.addEventListener("pointerup", (e) => {
+        el.addEventListener("pointerup", onCoinEnd);
+        el.addEventListener("pointercancel", onCoinEnd);
+
+        function onCoinEnd(e) {
           if (!drag || drag.el !== el) return;
-          el.releasePointerCapture(e.pointerId);
+          if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId);
           el.classList.remove("dragging");
           dropZones.forEach((id) => document.getElementById(id).classList.remove("over"));
           if (drag.float) drag.float.remove();
@@ -1413,7 +1526,7 @@
             el.classList.remove("hidden");
           }
           drag = null;
-        });
+        }
       }
 
       document.querySelectorAll(".pairBtn").forEach((btn) => {
@@ -1591,8 +1704,10 @@
         btn.addEventListener("click", () => { lang = btn.dataset.lang; applyLang(); });
       });
 
-      drawChart();
+      resizeChart();
       applyLang();
+      window.addEventListener("resize", resizeChart);
+      window.addEventListener("orientationchange", () => setTimeout(resizeChart, 150));
     </script>
   </body>
 </html>
