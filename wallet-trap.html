@@ -1300,39 +1300,68 @@
       }
 
       function drawMountainScene(ctx, W, H, win) {
-        const sky = ctx.createLinearGradient(0, 0, 0, H);
-        sky.addColorStop(0, win ? "#1a2a22" : "#241416");
-        sky.addColorStop(0.45, "#0c1210");
-        sky.addColorStop(1, "#080c0a");
+        const sky = ctx.createLinearGradient(0, 0, W * 0.4, H);
+        sky.addColorStop(0, "#163c28");
+        sky.addColorStop(0.4, "#0f2a1c");
+        sky.addColorStop(1, win ? "#0a1c14" : "#142018");
         ctx.fillStyle = sky;
         ctx.fillRect(0, 0, W, H);
 
-        ctx.fillStyle = win ? "#e8b84a33" : "#ef5a6822";
+        ctx.fillStyle = win ? "#2ee27a28" : "#e8b84a22";
         ctx.beginPath();
-        ctx.arc(W - 90, 70, 46, 0, Math.PI * 2);
+        ctx.arc(W - 70, 58, 54, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = win ? "#2ee27a18" : "#e8b84a14";
+        ctx.beginPath();
+        ctx.arc(W - 70, 58, 88, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = "#121a16";
+        ctx.fillStyle = "#1a4a32";
         ctx.beginPath();
-        ctx.moveTo(W * 0.28, H);
-        ctx.lineTo(W * 0.52, H * 0.42);
-        ctx.lineTo(W * 0.72, H);
+        ctx.moveTo(W * 0.18, H);
+        ctx.lineTo(W * 0.38, H * 0.46);
+        ctx.lineTo(W * 0.56, H);
         ctx.fill();
 
-        ctx.fillStyle = "#0e1612";
+        ctx.fillStyle = "#145c3a";
         ctx.beginPath();
-        ctx.moveTo(W * 0.48, H);
-        ctx.lineTo(W * 0.78, H * 0.28);
-        ctx.lineTo(W + 20, H);
+        ctx.moveTo(W * 0.42, H);
+        ctx.lineTo(W * 0.62, H * 0.34);
+        ctx.lineTo(W * 0.82, H);
         ctx.fill();
 
-        ctx.strokeStyle = "#2ee27a44";
-        ctx.lineWidth = 2;
+        ctx.fillStyle = "#0d3a26";
         ctx.beginPath();
-        ctx.moveTo(W * 0.78, H * 0.28);
-        ctx.lineTo(W * 0.68, H * 0.48);
-        ctx.lineTo(W * 0.74, H * 0.62);
+        ctx.moveTo(W * 0.52, H + 8);
+        ctx.lineTo(W * 0.78, H * 0.18);
+        ctx.lineTo(W * 0.88, H * 0.32);
+        ctx.lineTo(W * 0.84, H * 0.48);
+        ctx.lineTo(W + 10, H);
+        ctx.fill();
+
+        ctx.fillStyle = "#1f6b44";
+        ctx.beginPath();
+        ctx.moveTo(W * 0.62, H);
+        ctx.lineTo(W * 0.78, H * 0.18);
+        ctx.lineTo(W * 0.92, H * 0.55);
+        ctx.lineTo(W * 0.98, H);
+        ctx.fill();
+
+        ctx.strokeStyle = "#2ee27a88";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(W * 0.78, H * 0.18);
+        ctx.lineTo(W * 0.72, H * 0.42);
+        ctx.lineTo(W * 0.78, H * 0.62);
+        ctx.lineTo(W * 0.74, H * 0.86);
         ctx.stroke();
+
+        ctx.fillStyle = "#c8d4cc";
+        [[W * 0.78, H * 0.18], [W * 0.72, H * 0.42], [W * 0.78, H * 0.62]].forEach(([x, y]) => {
+          ctx.beginPath();
+          ctx.arc(x, y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        });
       }
 
       async function buildShareCard() {
@@ -1347,38 +1376,50 @@
 
         drawMountainScene(ctx, W, H, win);
 
-        ctx.strokeStyle = win ? "#2ee27a66" : "#ef5a6866";
-        ctx.lineWidth = 3;
-        ctx.strokeRect(14, 14, W - 28, H - 28);
+        const mascot = await loadShareMascot();
+        if (mascot) {
+          const mw = 228, mh = 228;
+          ctx.save();
+          ctx.translate(W * 0.72, H * 0.46);
+          ctx.rotate(-0.22);
+          ctx.drawImage(mascot, -mw * 0.42, -mh * 0.55, mw, mh);
+          ctx.restore();
+        }
+
+        ctx.fillStyle = "#0a1c14dd";
+        ctx.beginPath();
+        ctx.roundRect(22, 22, 360, H - 44, 16);
+        ctx.fill();
+        ctx.strokeStyle = win ? "#2ee27a77" : "#ef5a6877";
+        ctx.lineWidth = 2;
+        ctx.stroke();
 
         ctx.fillStyle = "#2ee27a";
-        ctx.font = '700 16px "IBM Plex Mono", monospace';
-        ctx.fillText("STANDX · SUMMIT SIM", 40, 52);
+        ctx.font = '700 15px "IBM Plex Mono", monospace';
+        ctx.fillText("STANDX · SUMMIT", 42, 56);
 
         const headline = win ? t("closeWinTitle") : (state.liquidated ? t("liqTitle") : state.slHit ? t("slTitle") : t("closeLossTitle"));
         ctx.fillStyle = "#f2f8f4";
-        ctx.font = '700 28px Inter, system-ui, sans-serif';
-        ctx.fillText(headline, 40, 96);
+        ctx.font = '700 22px Inter, system-ui, sans-serif';
+        ctx.fillText(headline, 42, 92);
 
         ctx.fillStyle = win ? "#2ee27a" : "#ef5a68";
-        ctx.font = '700 48px "IBM Plex Mono", monospace';
-        ctx.fillText(pnl + " DUSD", 40, 160);
+        ctx.font = '700 42px "IBM Plex Mono", monospace';
+        ctx.fillText(pnl + " DUSD", 42, 150);
 
         ctx.fillStyle = "#c5d6cc";
-        ctx.font = '600 20px "IBM Plex Mono", monospace';
-        ctx.fillText(sideLabel() + "  " + state.leverage + "x  " + state.pair, 40, 204);
-        ctx.fillText(t("hudTime") + "  " + time, 40, 238);
+        ctx.font = '600 18px "IBM Plex Mono", monospace';
+        ctx.fillText(sideLabel() + "  " + state.leverage + "x  " + state.pair, 42, 192);
+        ctx.fillText(t("hudTime") + "  " + time, 42, 226);
 
-        ctx.fillStyle = "#6f857a";
-        ctx.font = '500 14px "IBM Plex Mono", monospace';
-        ctx.fillText("standx-notebook.vercel.app/wallet-trap", 40, 384);
-        ctx.fillText("paper sim · not official", 40, 404);
+        ctx.fillStyle = "#7e9a8c";
+        ctx.font = '500 13px "IBM Plex Mono", monospace';
+        ctx.fillText("standx-notebook.vercel.app/wallet-trap", 42, 368);
+        ctx.fillText("paper sim · not official", 42, 390);
 
-        const mascot = await loadShareMascot();
-        if (mascot) {
-          const mw = 250, mh = 250;
-          ctx.drawImage(mascot, W - mw - 28, H - mh - 18, mw, mh);
-        }
+        ctx.strokeStyle = win ? "#2ee27a55" : "#ef5a6855";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(10, 10, W - 20, H - 20);
 
         return c;
       }
