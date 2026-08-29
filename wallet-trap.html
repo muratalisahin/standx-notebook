@@ -271,7 +271,7 @@
       .chartTop span { font: 500 10px "IBM Plex Mono", monospace; color: var(--dim); }
       .chartTop b { font: 600 10px "IBM Plex Mono", monospace; color: var(--dim); }
       .chartTop b { font: 600 10px "IBM Plex Mono", monospace; color: var(--dim); }
-      #chart { width: 100%; height: 168px; display: block; border-radius: 6px; background: #080c0a; }
+      #chart { width: 100%; height: 200px; display: block; border-radius: 6px; background: #080c0a; }
       .chartPrices {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -687,7 +687,7 @@
         .welcome img { width: 72px; height: auto; max-height: 64px; }
         .welcomeText h1 { font-size: 1rem; }
         .welcomeText p { font-size: 0.82rem; }
-        #chart { height: 140px; }
+        #chart { height: 168px; }
         .shellTop {
           flex-wrap: wrap;
           gap: 6px;
@@ -833,7 +833,7 @@
               <div class="simGrid">
                 <div class="chartBox">
                   <div class="chartTop"><b id="chartPair">ETH</b><span data-i="chartPerp"> · perp</span></div>
-                  <canvas id="chart" width="420" height="168"></canvas>
+                  <canvas id="chart" width="420" height="200"></canvas>
                   <div class="chartPrices">
                     <div class="pxCell mark on">
                       <span data-i="legMark">mark</span>
@@ -1115,8 +1115,8 @@
       let candles = [];
       let forming = null;
       let tickInBar = 0;
-      const BAR_TICKS = 5;
-      const MAX_BARS = 36;
+      const BAR_TICKS = 4;
+      const MAX_BARS = 28;
       let coinEl = null, drag = null, chartIv = null;
       const dropZones = ["cash", "perps"];
 
@@ -1191,8 +1191,8 @@
           p += (Math.random() - 0.5) * vol * 4;
           candles.push({
             o, c: p,
-            h: Math.max(o, p) + Math.random() * vol * 0.4,
-            l: Math.min(o, p) - Math.random() * vol * 0.4,
+            h: Math.max(o, p) + Math.random() * vol * 1.4,
+            l: Math.min(o, p) - Math.random() * vol * 1.4,
           });
         }
         forming = { o: p, h: p, l: p, c: p };
@@ -1206,13 +1206,13 @@
       }
 
       function tickCandle() {
-        const vol = PAIRS[state.pair].vol * (state.open ? 1.15 + state.leverage * 0.06 : 0.55);
+        const vol = PAIRS[state.pair].vol * (state.open ? 1.8 + state.leverage * 0.1 : 0.7);
         const bias = state.open && state.side === "short" ? 0.06 : state.open && state.side === "long" ? -0.06 : 0;
         state.mark += (Math.random() - 0.48 + bias) * vol;
         if (!forming) forming = { o: state.mark, h: state.mark, l: state.mark, c: state.mark };
         forming.c = state.mark;
-        forming.h = Math.max(forming.h, state.mark);
-        forming.l = Math.min(forming.l, state.mark);
+        forming.h = Math.max(forming.h, state.mark + (state.open ? Math.random() * vol * 0.35 : 0));
+        forming.l = Math.min(forming.l, state.mark - (state.open ? Math.random() * vol * 0.35 : 0));
         history.push(state.mark);
         if (history.length > 96) history.shift();
         tickInBar++;
@@ -1693,7 +1693,7 @@
         const box = els.chart.parentElement;
         if (!box) return;
         const w = Math.max(280, Math.floor(box.clientWidth));
-        const h = window.matchMedia("(max-width:600px)").matches ? 140 : 168;
+        const h = window.matchMedia("(max-width:600px)").matches ? 168 : 200;
         if (els.chart.width !== w || els.chart.height !== h) {
           els.chart.width = w;
           els.chart.height = h;
@@ -1753,26 +1753,35 @@
           ctx.stroke();
         }
 
-        // candles — last bar is live (grows while position is open)
-        const n = live.length;
-        const gap = Math.max(1, plotW / n * 0.28);
-        const cw = Math.max(2.5, plotW / n - gap);
-        live.forEach((cd, i) => {
+        // candles — wider + bolder while a trade is open
+        const view = state.open ? live.slice(-16) : live.slice(-24);
+        const n = view.length;
+        const gap = Math.max(2, plotW / n * (state.open ? 0.18 : 0.26));
+        const cw = Math.max(state.open ? 7 : 4, plotW / n - gap);
+        view.forEach((cd, i) => {
           const x = xAt(i, n);
           const up = cd.c >= cd.o;
           const color = up ? "#2ee27a" : "#ef5a68";
           const liveBar = i === n - 1;
           ctx.strokeStyle = color;
-          ctx.fillStyle = liveBar ? (up ? "#2ee27acc" : "#ef5a68cc") : color;
-          ctx.lineWidth = liveBar ? 1.6 : 1.1;
+          ctx.lineWidth = liveBar ? 2.4 : (state.open ? 2 : 1.4);
           ctx.beginPath();
           ctx.moveTo(x, y(cd.h));
           ctx.lineTo(x, y(cd.l));
           ctx.stroke();
           const top = y(Math.max(cd.o, cd.c));
           const bot = y(Math.min(cd.o, cd.c));
-          const bh = Math.max(2, bot - top);
+          const bh = Math.max(state.open ? 5 : 3, bot - top);
+          if (liveBar) {
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 10;
+          }
+          ctx.fillStyle = color;
           ctx.fillRect(x - cw / 2, top, cw, bh);
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = up ? "#9fffc4" : "#ffb3bb";
+          ctx.lineWidth = 1.2;
+          ctx.strokeRect(x - cw / 2, top, cw, bh);
         });
 
         const lastX = padL + plotW;
