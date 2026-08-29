@@ -1013,6 +1013,11 @@
       };
 
       const history = Array(96).fill(PAIRS.ETH.mark);
+      let candles = [];
+      let forming = null;
+      let tickInBar = 0;
+      const BAR_TICKS = 5;
+      const MAX_BARS = 36;
       let coinEl = null, drag = null, chartIv = null;
       const dropZones = ["cash", "perps"];
 
@@ -1078,11 +1083,52 @@
         return n.toFixed(1);
       }
 
+      function seedCandles(price) {
+        candles = [];
+        let p = price;
+        const vol = PAIRS[state.pair].vol;
+        for (let i = 0; i < 22; i++) {
+          const o = p;
+          p += (Math.random() - 0.5) * vol * 4;
+          candles.push({
+            o, c: p,
+            h: Math.max(o, p) + Math.random() * vol * 0.4,
+            l: Math.min(o, p) - Math.random() * vol * 0.4,
+          });
+        }
+        forming = { o: p, h: p, l: p, c: p };
+        tickInBar = 0;
+        history.fill(p);
+        state.mark = p;
+      }
+
+      function chartBars() {
+        return forming ? candles.concat([forming]) : candles.slice();
+      }
+
+      function tickCandle() {
+        const vol = PAIRS[state.pair].vol * (state.open ? 1.15 + state.leverage * 0.06 : 0.55);
+        const bias = state.open && state.side === "short" ? 0.06 : state.open && state.side === "long" ? -0.06 : 0;
+        state.mark += (Math.random() - 0.48 + bias) * vol;
+        if (!forming) forming = { o: state.mark, h: state.mark, l: state.mark, c: state.mark };
+        forming.c = state.mark;
+        forming.h = Math.max(forming.h, state.mark);
+        forming.l = Math.min(forming.l, state.mark);
+        history.push(state.mark);
+        if (history.length > 96) history.shift();
+        tickInBar++;
+        if (tickInBar >= BAR_TICKS) {
+          candles.push({ o: forming.o, h: forming.h, l: forming.l, c: forming.c });
+          if (candles.length > MAX_BARS) candles.shift();
+          forming = { o: state.mark, h: state.mark, l: state.mark, c: state.mark };
+          tickInBar = 0;
+        }
+      }
+
       function setPair(pair) {
         if (state.open || state.pair === pair) return;
         state.pair = pair;
-        state.mark = PAIRS[pair].mark;
-        history.fill(state.mark);
+        seedCandles(PAIRS[pair].mark);
         els.chartPair.textContent = pair;
         document.querySelectorAll(".pairBtn").forEach((b) => b.classList.toggle("on", b.dataset.pair === pair));
         drawChart();
@@ -1242,16 +1288,51 @@
 
       function loadShareMascot() {
         return new Promise((resolve) => {
-          const img = els.mascotImg || new Image();
-          if (img.complete && img.naturalWidth) {
-            resolve(img);
+          if (loadShareMascot._img && loadShareMascot._img.complete && loadShareMascot._img.naturalWidth) {
+            resolve(loadShareMascot._img);
             return;
           }
           const fresh = new Image();
-          fresh.onload = () => resolve(fresh);
+          fresh.onload = () => { loadShareMascot._img = fresh; resolve(fresh); };
           fresh.onerror = () => resolve(null);
-          fresh.src = "images/stander-fluid.png";
+          fresh.src = "images/stander-climb.png";
         });
+      }
+
+      function drawMountainScene(ctx, W, H, win) {
+        const sky = ctx.createLinearGradient(0, 0, 0, H);
+        sky.addColorStop(0, win ? "#1a2a22" : "#241416");
+        sky.addColorStop(0.45, "#0c1210");
+        sky.addColorStop(1, "#080c0a");
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.fillStyle = win ? "#e8b84a33" : "#ef5a6822";
+        ctx.beginPath();
+        ctx.arc(W - 90, 70, 46, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#121a16";
+        ctx.beginPath();
+        ctx.moveTo(W * 0.28, H);
+        ctx.lineTo(W * 0.52, H * 0.42);
+        ctx.lineTo(W * 0.72, H);
+        ctx.fill();
+
+        ctx.fillStyle = "#0e1612";
+        ctx.beginPath();
+        ctx.moveTo(W * 0.48, H);
+        ctx.lineTo(W * 0.78, H * 0.28);
+        ctx.lineTo(W + 20, H);
+        ctx.fill();
+
+        ctx.strokeStyle = "#2ee27a44";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(W * 0.78, H * 0.28);
+        ctx.lineTo(W * 0.68, H * 0.48);
+        ctx.lineTo(W * 0.74, H * 0.62);
+        ctx.stroke();
       }
 
       async function buildShareCard() {
@@ -1260,48 +1341,43 @@
         c.width = W;
         c.height = H;
         const ctx = c.getContext("2d");
-        const win = state.pnl >= 0;
+        const win = state.pnl >= 0 && !state.liquidated;
         const pnl = (win ? "+" : "") + state.pnl.toFixed(2);
         const time = elapsedSec();
 
-        const bg = ctx.createLinearGradient(0, 0, W, H);
-        bg.addColorStop(0, "#0a1410");
-        bg.addColorStop(0.55, "#0c1210");
-        bg.addColorStop(1, win ? "#0a1a12" : "#1a0c0e");
-        ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, W, H);
+        drawMountainScene(ctx, W, H, win);
 
-        ctx.strokeStyle = win ? "#2ee27a55" : "#ef5a6855";
+        ctx.strokeStyle = win ? "#2ee27a66" : "#ef5a6866";
         ctx.lineWidth = 3;
         ctx.strokeRect(14, 14, W - 28, H - 28);
 
         ctx.fillStyle = "#2ee27a";
-        ctx.font = '700 18px "IBM Plex Mono", monospace';
-        ctx.fillText("STANDX · WALLET TRAP", 40, 56);
+        ctx.font = '700 16px "IBM Plex Mono", monospace';
+        ctx.fillText("STANDX · SUMMIT SIM", 40, 52);
 
+        const headline = win ? t("closeWinTitle") : (state.liquidated ? t("liqTitle") : state.slHit ? t("slTitle") : t("closeLossTitle"));
         ctx.fillStyle = "#f2f8f4";
-        ctx.font = '700 42px Inter, system-ui, sans-serif';
-        ctx.fillText(win ? t("closeWinTitle") : (state.liquidated ? t("liqTitle") : state.slHit ? t("slTitle") : t("closeLossTitle")), 40, 118);
+        ctx.font = '700 28px Inter, system-ui, sans-serif';
+        ctx.fillText(headline, 40, 96);
 
         ctx.fillStyle = win ? "#2ee27a" : "#ef5a68";
-        ctx.font = '700 56px "IBM Plex Mono", monospace';
-        ctx.fillText(pnl + " DUSD", 40, 188);
+        ctx.font = '700 48px "IBM Plex Mono", monospace';
+        ctx.fillText(pnl + " DUSD", 40, 160);
 
-        ctx.fillStyle = "#9ab0a4";
-        ctx.font = '600 22px "IBM Plex Mono", monospace';
-        ctx.fillText(sideLabel() + "  " + state.leverage + "x  " + state.pair, 40, 236);
-        ctx.fillText(t("hudTime") + "  " + time, 40, 272);
+        ctx.fillStyle = "#c5d6cc";
+        ctx.font = '600 20px "IBM Plex Mono", monospace';
+        ctx.fillText(sideLabel() + "  " + state.leverage + "x  " + state.pair, 40, 204);
+        ctx.fillText(t("hudTime") + "  " + time, 40, 238);
 
         ctx.fillStyle = "#6f857a";
-        ctx.font = '500 16px "IBM Plex Mono", monospace';
-        ctx.fillText("standx-notebook.vercel.app/wallet-trap", 40, 380);
+        ctx.font = '500 14px "IBM Plex Mono", monospace';
+        ctx.fillText("standx-notebook.vercel.app/wallet-trap", 40, 384);
         ctx.fillText("paper sim · not official", 40, 404);
 
         const mascot = await loadShareMascot();
         if (mascot) {
-          const mw = 210, mh = 210;
-          const mx = W - mw - 48, my = H / 2 - mh / 2 + 10;
-          ctx.drawImage(mascot, mx, my, mw, mh);
+          const mw = 250, mh = 250;
+          ctx.drawImage(mascot, W - mw - 28, H - mh - 18, mw, mh);
         }
 
         return c;
@@ -1420,22 +1496,6 @@
         drawChart();
       }
 
-      function buildCandles(prices, count) {
-        const n = Math.max(count, 8);
-        const size = Math.max(1, Math.floor(prices.length / n));
-        const candles = [];
-        for (let i = 0; i < n; i++) {
-          const start = i * size;
-          const end = i === n - 1 ? prices.length : Math.min(prices.length, start + size);
-          if (start >= prices.length) break;
-          const slice = prices.slice(start, end);
-          const o = slice[0];
-          const c = slice[slice.length - 1];
-          candles.push({ o, h: Math.max(...slice), l: Math.min(...slice), c });
-        }
-        return candles;
-      }
-
       function drawChart() {
         const ctx = els.chart.getContext("2d");
         const w = els.chart.width, h = els.chart.height;
@@ -1445,9 +1505,11 @@
         const entry = previewEntry();
         const liq = previewLiq();
         const sl = previewSl();
-        const candleN = Math.max(18, Math.floor(plotW / 9));
-        const candles = buildCandles(history, candleN);
-        let lo = Math.min(...history), hi = Math.max(...history);
+        const bars = chartBars();
+        if (!bars.length) seedCandles(state.mark);
+        const live = chartBars();
+        let lo = Math.min(...live.map((b) => b.l), state.mark);
+        let hi = Math.max(...live.map((b) => b.h), state.mark);
         if (entry != null) { lo = Math.min(lo, entry); hi = Math.max(hi, entry); }
         if (liq != null) { lo = Math.min(lo, liq); hi = Math.max(hi, liq); }
         if (sl != null) { lo = Math.min(lo, sl); hi = Math.max(hi, sl); }
@@ -1486,49 +1548,27 @@
           ctx.stroke();
         }
 
-        // candles
-        const gap = Math.max(1, plotW / candles.length * 0.22);
-        const cw = Math.max(2, plotW / candles.length - gap);
-        candles.forEach((cd, i) => {
-          const x = xAt(i, candles.length);
+        // candles — last bar is live (grows while position is open)
+        const n = live.length;
+        const gap = Math.max(1, plotW / n * 0.28);
+        const cw = Math.max(2.5, plotW / n - gap);
+        live.forEach((cd, i) => {
+          const x = xAt(i, n);
           const up = cd.c >= cd.o;
           const color = up ? "#2ee27a" : "#ef5a68";
+          const liveBar = i === n - 1;
           ctx.strokeStyle = color;
-          ctx.fillStyle = color;
-          ctx.lineWidth = 1;
+          ctx.fillStyle = liveBar ? (up ? "#2ee27acc" : "#ef5a68cc") : color;
+          ctx.lineWidth = liveBar ? 1.6 : 1.1;
           ctx.beginPath();
           ctx.moveTo(x, y(cd.h));
           ctx.lineTo(x, y(cd.l));
           ctx.stroke();
           const top = y(Math.max(cd.o, cd.c));
           const bot = y(Math.min(cd.o, cd.c));
-          const bh = Math.max(1, bot - top);
+          const bh = Math.max(2, bot - top);
           ctx.fillRect(x - cw / 2, top, cw, bh);
         });
-
-        // soft area under mark path
-        ctx.beginPath();
-        history.forEach((p, i) => {
-          const x = padL + (i / (history.length - 1)) * plotW;
-          i === 0 ? ctx.moveTo(x, y(p)) : ctx.lineTo(x, y(p));
-        });
-        ctx.lineTo(padL + plotW, h - padB);
-        ctx.lineTo(padL, h - padB);
-        ctx.closePath();
-        const grad = ctx.createLinearGradient(0, padT, 0, h - padB);
-        grad.addColorStop(0, "#2ee27a18");
-        grad.addColorStop(1, "#2ee27a00");
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        ctx.beginPath();
-        history.forEach((p, i) => {
-          const x = padL + (i / (history.length - 1)) * plotW;
-          i === 0 ? ctx.moveTo(x, y(p)) : ctx.lineTo(x, y(p));
-        });
-        ctx.strokeStyle = "#2ee27a55";
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
 
         const lastX = padL + plotW;
         const lastY = y(state.mark);
@@ -1588,11 +1628,7 @@
 
       function tickChart() {
         if (state.liquidated) return;
-        const bias = state.open && state.side === "short" ? 0.02 : state.open && state.side === "long" ? -0.02 : 0;
-        const vol = PAIRS[state.pair].vol * (1 + state.leverage * 0.04);
-        state.mark += (Math.random() - 0.5 + bias) * vol;
-        history.push(state.mark);
-        history.shift();
+        tickCandle();
         if (state.open) {
           state.pnl = calcPnl();
           if (isSlHit()) {
@@ -1612,7 +1648,8 @@
 
       function startChart() {
         if (chartIv) return;
-        chartIv = setInterval(tickChart, 400);
+        if (!candles.length) seedCandles(state.mark);
+        chartIv = setInterval(tickChart, 180);
       }
 
       function stopChart() {
@@ -1844,6 +1881,7 @@
         els.perps.classList.remove("locked");
         els.cash.classList.add("active");
         makeCoin(els.cashSlot);
+        seedCandles(state.mark);
         startChart();
         setStatus(t("statusTrap"), false);
         els.hudTime.textContent = "00:00";
@@ -1887,6 +1925,10 @@
         state.entry = state.mark;
         state.liq = liqPrice(state.entry, state.side, state.leverage);
         state.sl = slPrice(state.entry, state.side, state.leverage);
+        if (forming) candles.push({ o: forming.o, h: forming.h, l: forming.l, c: forming.c });
+        if (candles.length > MAX_BARS) candles.shift();
+        forming = { o: state.mark, h: state.mark, l: state.mark, c: state.mark };
+        tickInBar = 0;
         els.execBtn.classList.remove("ready");
         els.execBtn.classList.add("done");
         els.execBtn.textContent = t("execDone");
@@ -1924,8 +1966,7 @@
         speechSynthesis?.cancel();
         els.liqOverlay.classList.remove("show");
         els.slOverlay.classList.remove("show");
-        history.fill(PAIRS.ETH.mark);
-        state.mark = PAIRS.ETH.mark;
+        seedCandles(PAIRS.ETH.mark);
         els.chartPair.textContent = "ETH";
         document.querySelectorAll(".pairBtn").forEach((b) => b.classList.toggle("on", b.dataset.pair === "ETH"));
         els.stage.classList.add("introPhase");
@@ -1974,6 +2015,7 @@
         btn.addEventListener("click", () => { lang = btn.dataset.lang; applyLang(); });
       });
 
+      seedCandles(PAIRS.ETH.mark);
       resizeChart();
       applyLang();
       window.addEventListener("resize", resizeChart);
