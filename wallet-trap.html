@@ -1295,7 +1295,7 @@
           const fresh = new Image();
           fresh.onload = () => { loadShareMascot._img = fresh; resolve(fresh); };
           fresh.onerror = () => resolve(null);
-          fresh.src = "images/stander-climb.png";
+          fresh.src = "images/stander-climb.png?v=2";
         });
       }
 
@@ -1303,7 +1303,7 @@
         const sky = ctx.createLinearGradient(0, 0, W * 0.4, H);
         sky.addColorStop(0, "#163c28");
         sky.addColorStop(0.4, "#0f2a1c");
-        sky.addColorStop(1, win ? "#0a1c14" : "#142018");
+        sky.addColorStop(1, win ? "#0a1c14" : "#0f2a1c");
         ctx.fillStyle = sky;
         ctx.fillRect(0, 0, W, H);
 
