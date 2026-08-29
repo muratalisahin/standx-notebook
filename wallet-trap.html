@@ -269,7 +269,7 @@
       .chartTop span { font: 500 10px "IBM Plex Mono", monospace; color: var(--dim); }
       .chartTop b { font: 600 10px "IBM Plex Mono", monospace; color: var(--dim); }
       .chartTop b { font: 600 10px "IBM Plex Mono", monospace; color: var(--dim); }
-      #chart { width: 100%; height: 120px; display: block; border-radius: 6px; background: #080c0a; }
+      #chart { width: 100%; height: 168px; display: block; border-radius: 6px; background: #080c0a; }
       .chartPrices {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -449,11 +449,22 @@
       }
       .win.show { display: block; }
       .win h2 { margin: 0 0 4px; color: var(--green); font-size: 1rem; }
+      .win.loss h2 { color: var(--red); }
       .win p { margin: 0 0 8px; color: var(--dim); font-size: 11px; }
+      .winActions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
       .win button {
         font: 600 10px "IBM Plex Mono", monospace;
         padding: 7px 12px; border-radius: 6px;
-        border: 1px solid var(--green); background: transparent; color: var(--green); cursor: pointer; margin: 0 3px;
+        border: 1px solid var(--green); background: transparent; color: var(--green); cursor: pointer;
+      }
+      .win button.share {
+        border-color: var(--amber); color: var(--amber); background: #e8b84a14;
+      }
+      .liqCard .share, .slCard .share {
+        margin-left: 6px;
+        border: 1px solid var(--amber);
+        background: transparent;
+        color: var(--amber);
       }
       .toast {
         position: fixed; bottom: 12px; left: 50%;
@@ -464,6 +475,9 @@
         opacity: 0; transition: 0.25s; z-index: 300; pointer-events: none;
       }
       .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+      .toast.ok {
+        border-color: #2ee27a44; color: var(--green); background: #0a1410ee;
+      }
       .liqOverlay {
         position: fixed; inset: 0; z-index: 500;
         background: #000000cc;
@@ -585,6 +599,7 @@
         .welcome img { width: 56px; height: 56px; }
         .welcomeText h1 { font-size: 1rem; }
         .welcomeText p { font-size: 0.82rem; }
+        #chart { height: 140px; }
         .shellTop {
           flex-wrap: wrap;
           gap: 6px;
@@ -643,6 +658,7 @@
         <h2 data-i="liqTitle">Kaybettiniz</h2>
         <p id="liqDetail"></p>
         <button type="button" id="liqAgain" data-i="againBtn">Tekrar</button>
+        <button type="button" id="liqShare" class="share" data-i="shareBtn">Paylaş</button>
       </div>
     </div>
     <div class="slOverlay" id="slOverlay" role="alertdialog" aria-modal="true">
@@ -651,6 +667,7 @@
         <h2 data-i="slTitle">Stop loss</h2>
         <p id="slDetail"></p>
         <button type="button" id="slAgain" data-i="againBtn">Tekrar</button>
+        <button type="button" id="slShare" class="share" data-i="shareBtn">Paylaş</button>
       </div>
     </div>
     <div class="wrap">
@@ -675,7 +692,7 @@
           </div>
         </div>
         <div class="hud">
-          <div class="hudCell"><label data-i="hudTime">Time</label><output id="hudTime">—</output></div>
+          <div class="hudCell"><label data-i="hudTime">Time</label><output id="hudTime">00:00</output></div>
           <div class="hudCell"><label data-i="hudErr">Err</label><output id="hudErr" class="bad">0</output></div>
           <div class="hudCell"><label data-i="hudSide">Side</label><output id="hudSide" class="short">—</output></div>
           <div class="hudCell"><label data-i="hudLev">Lev</label><output id="hudLev">—</output></div>
@@ -720,7 +737,7 @@
               <div class="simGrid">
                 <div class="chartBox">
                   <div class="chartTop"><b id="chartPair">ETH</b><span data-i="chartPerp"> · perp</span></div>
-                  <canvas id="chart" width="420" height="120"></canvas>
+                  <canvas id="chart" width="420" height="168"></canvas>
                   <div class="chartPrices">
                     <div class="pxCell mark on">
                       <span data-i="legMark">mark</span>
@@ -784,8 +801,11 @@
               <div class="win" id="win">
                 <h2 id="winTitle" data-i="winTitle">Trap beat.</h2>
                 <p id="winDetail"></p>
-                <button type="button" id="again" data-i="againBtn">Again</button>
-                <button type="button" id="breakLink" data-i="breakBtn">Break map</button>
+                <div class="winActions">
+                  <button type="button" id="shareBtn" class="share" data-i="shareBtn">Paylaş</button>
+                  <button type="button" id="again" data-i="againBtn">Again</button>
+                  <button type="button" id="breakLink" data-i="breakBtn">Break map</button>
+                </div>
               </div>
             </div>
           </div>
@@ -813,13 +833,16 @@
           closeBtn: "İŞLEMİ KAPAT",
           xferLabel: "Cash → Perps · 100 DUSD", xferBtn: "Onayla",
           winTitle: "Tuzak geçildi.", againBtn: "Tekrar", breakBtn: "Kırılma haritası",
+          shareBtn: "Paylaş",
+          shareCopied: "Kopyalandı",
+          shareText: "StandX Wallet Trap\n{side} {lev}x {pair}\nPnL {pnl} DUSD · {time}\nhttps://standx-notebook.vercel.app/wallet-trap",
           liqTitle: "Kaybettiniz",
           liqDetail: "{side} {lev}x · liq {liq} · −{loss} DUSD kâğıt",
           slTitle: "Stop loss tetiklendi",
           slDetail: "{side} {lev}x · sl {sl} · {pnl} DUSD kâğıt",
           closeWinTitle: "Pozisyon kapandı — kâr",
           closeLossTitle: "Pozisyon kapandı — zarar",
-          closeDetail: "{side} {lev}x · {pnl} DUSD kâğıt · {time}s",
+          closeDetail: "{side} {lev}x · {pnl} DUSD kâğıt · {time}",
           foot: "Resmi değil · Yatırım tavsiyesi değil · 1x–20x kâğıt sim",
           statusTrap: "<strong>Tuzak:</strong> Para Cash’te. Perps boş. Long/short için önce transfer.",
           statusConfirm: "<strong>Transferi onayla.</strong> MM değişmez — sadece bucket.",
@@ -866,13 +889,16 @@
           closeBtn: "CLOSE POSITION",
           xferLabel: "Cash → Perps · 100 DUSD", xferBtn: "Confirm",
           winTitle: "Trap beat.", againBtn: "Again", breakBtn: "Break map",
+          shareBtn: "Share",
+          shareCopied: "Copied",
+          shareText: "StandX Wallet Trap\n{side} {lev}x {pair}\nPnL {pnl} DUSD · {time}\nhttps://standx-notebook.vercel.app/wallet-trap",
           liqTitle: "You lost",
           liqDetail: "{side} {lev}x · liq {liq} · −{loss} DUSD paper",
           slTitle: "Stop loss hit",
           slDetail: "{side} {lev}x · sl {sl} · {pnl} DUSD paper",
           closeWinTitle: "Closed — profit",
           closeLossTitle: "Closed — loss",
-          closeDetail: "{side} {lev}x · {pnl} DUSD paper · {time}s",
+          closeDetail: "{side} {lev}x · {pnl} DUSD paper · {time}",
           foot: "Not official · Not investment advice · 1x–20x paper sim",
           statusTrap: "<strong>Trap:</strong> Funds in Cash. Perps empty. Transfer first to trade long/short.",
           statusConfirm: "<strong>Confirm transfer.</strong> MM unchanged — buckets only.",
@@ -919,13 +945,16 @@
           closeBtn: "平仓",
           xferLabel: "Cash → Perps · 100 DUSD", xferBtn: "确认",
           winTitle: "陷阱已破。", againBtn: "再来", breakBtn: "摩擦地图",
+          shareBtn: "分享",
+          shareCopied: "已复制",
+          shareText: "StandX Wallet Trap\n{side} {lev}x {pair}\nPnL {pnl} DUSD · {time}\nhttps://standx-notebook.vercel.app/wallet-trap",
           liqTitle: "你输了",
           liqDetail: "{side} {lev}x · 强平 {liq} · −{loss} DUSD 纸面",
           slTitle: "止损触发",
           slDetail: "{side} {lev}x · 止损 {sl} · {pnl} DUSD 纸面",
           closeWinTitle: "已平仓 — 盈利",
           closeLossTitle: "已平仓 — 亏损",
-          closeDetail: "{side} {lev}x · {pnl} DUSD 纸面 · {time}秒",
+          closeDetail: "{side} {lev}x · {pnl} DUSD 纸面 · {time}",
           foot: "非官方 · 非投资建议 · 1x–20x 纸面模拟",
           statusTrap: "<strong>陷阱：</strong>资金在 Cash。Perps 空。做多/做空前先转账。",
           statusConfirm: "<strong>确认转账。</strong>MM 不变 — 只有分桶。",
@@ -976,14 +1005,14 @@
         phase: "intro",
         pair: "ETH",
         cash: 0, perps: 0, chain: 0,
-        mistakes: 0, t0: 0, raf: 0,
+        mistakes: 0, t0: 0, raf: 0, elapsedMs: 0, timing: false,
         pendingXfer: false,
         side: "short", leverage: 2,
         mark: PAIRS.ETH.mark, entry: 0, liq: 0, sl: 0,
         open: false, pnl: 0, liquidated: false, slHit: false,
       };
 
-      const history = Array(70).fill(PAIRS.ETH.mark);
+      const history = Array(96).fill(PAIRS.ETH.mark);
       let coinEl = null, drag = null, chartIv = null;
       const dropZones = ["cash", "perps"];
 
@@ -1036,6 +1065,10 @@
         slDetail: document.getElementById("slDetail"),
         slAgain: document.getElementById("slAgain"),
         winTitle: document.getElementById("winTitle"),
+        shareBtn: document.getElementById("shareBtn"),
+        liqShare: document.getElementById("liqShare"),
+        slShare: document.getElementById("slShare"),
+        mascotImg: document.getElementById("mascotImg"),
         chartPair: document.getElementById("chartPair"),
       };
 
@@ -1085,12 +1118,12 @@
         state.open = false;
         state.pnl = -AMOUNT * 0.92;
         state.phase = "liq";
-        cancelAnimationFrame(state.raf);
+        stopTradeTimer();
+        stopChart();
         els.win.classList.remove("show");
         els.closeBtn.classList.remove("show");
-        const sideLabel = state.side === "short" ? t("hudShort") : t("hudLong");
         els.liqDetail.textContent = tf("liqDetail", {
-          side: sideLabel,
+          side: sideLabel(),
           lev: state.leverage,
           liq: fmtPx(state.liq),
           loss: (AMOUNT * 0.92).toFixed(1),
@@ -1161,8 +1194,158 @@
         return state.side === "short" ? t("hudShort") : t("hudLong");
       }
 
+      function fmtClock(ms) {
+        const total = Math.max(0, Math.floor(ms / 1000));
+        const m = Math.floor(total / 60);
+        const s = total % 60;
+        return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+      }
+
+      function liveElapsedMs() {
+        if (!state.timing || !state.t0) return state.elapsedMs || 0;
+        return performance.now() - state.t0;
+      }
+
+      function startTradeTimer() {
+        cancelAnimationFrame(state.raf);
+        state.t0 = performance.now();
+        state.elapsedMs = 0;
+        state.timing = true;
+        els.hudTime.textContent = "00:00";
+        tick();
+      }
+
+      function stopTradeTimer() {
+        if (state.timing) {
+          state.elapsedMs = performance.now() - state.t0;
+          state.timing = false;
+        }
+        cancelAnimationFrame(state.raf);
+        state.raf = 0;
+        els.hudTime.textContent = fmtClock(state.elapsedMs);
+      }
+
       function elapsedSec() {
-        return ((performance.now() - state.t0) / 1000).toFixed(1);
+        return fmtClock(state.timing ? liveElapsedMs() : state.elapsedMs);
+      }
+
+      function shareResultText() {
+        const pnl = (state.pnl >= 0 ? "+" : "") + state.pnl.toFixed(2);
+        return tf("shareText", {
+          side: sideLabel(),
+          lev: state.leverage,
+          pair: state.pair,
+          pnl,
+          time: elapsedSec(),
+        });
+      }
+
+      function loadShareMascot() {
+        return new Promise((resolve) => {
+          const img = els.mascotImg || new Image();
+          if (img.complete && img.naturalWidth) {
+            resolve(img);
+            return;
+          }
+          const fresh = new Image();
+          fresh.onload = () => resolve(fresh);
+          fresh.onerror = () => resolve(null);
+          fresh.src = "images/stander-fluid.png";
+        });
+      }
+
+      async function buildShareCard() {
+        const W = 720, H = 420;
+        const c = document.createElement("canvas");
+        c.width = W;
+        c.height = H;
+        const ctx = c.getContext("2d");
+        const win = state.pnl >= 0;
+        const pnl = (win ? "+" : "") + state.pnl.toFixed(2);
+        const time = elapsedSec();
+
+        const bg = ctx.createLinearGradient(0, 0, W, H);
+        bg.addColorStop(0, "#0a1410");
+        bg.addColorStop(0.55, "#0c1210");
+        bg.addColorStop(1, win ? "#0a1a12" : "#1a0c0e");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.strokeStyle = win ? "#2ee27a55" : "#ef5a6855";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(14, 14, W - 28, H - 28);
+
+        ctx.fillStyle = "#2ee27a";
+        ctx.font = '700 18px "IBM Plex Mono", monospace';
+        ctx.fillText("STANDX · WALLET TRAP", 40, 56);
+
+        ctx.fillStyle = "#f2f8f4";
+        ctx.font = '700 42px Inter, system-ui, sans-serif';
+        ctx.fillText(win ? t("closeWinTitle") : (state.liquidated ? t("liqTitle") : state.slHit ? t("slTitle") : t("closeLossTitle")), 40, 118);
+
+        ctx.fillStyle = win ? "#2ee27a" : "#ef5a68";
+        ctx.font = '700 56px "IBM Plex Mono", monospace';
+        ctx.fillText(pnl + " DUSD", 40, 188);
+
+        ctx.fillStyle = "#9ab0a4";
+        ctx.font = '600 22px "IBM Plex Mono", monospace';
+        ctx.fillText(sideLabel() + "  " + state.leverage + "x  " + state.pair, 40, 236);
+        ctx.fillText(t("hudTime") + "  " + time, 40, 272);
+
+        ctx.fillStyle = "#6f857a";
+        ctx.font = '500 16px "IBM Plex Mono", monospace';
+        ctx.fillText("standx-notebook.vercel.app/wallet-trap", 40, 380);
+        ctx.fillText("paper sim · not official", 40, 404);
+
+        const mascot = await loadShareMascot();
+        if (mascot) {
+          const mw = 210, mh = 210;
+          const mx = W - mw - 48, my = H / 2 - mh / 2 + 10;
+          ctx.drawImage(mascot, mx, my, mw, mh);
+        }
+
+        return c;
+      }
+
+      async function shareResult() {
+        const text = shareResultText();
+        const url = "https://standx-notebook.vercel.app/wallet-trap";
+        const card = await buildShareCard();
+        const blob = await new Promise((res) => card.toBlob(res, "image/png"));
+        const file = blob ? new File([blob], "standx-wallet-trap.png", { type: "image/png" }) : null;
+
+        try {
+          if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ title: "StandX Wallet Trap", text, url, files: [file] });
+            return;
+          }
+          if (navigator.share) {
+            await navigator.share({ title: "StandX Wallet Trap", text, url });
+            return;
+          }
+        } catch (e) {
+          if (e && e.name === "AbortError") return;
+        }
+
+        if (file) {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "standx-wallet-trap.png";
+          a.click();
+          URL.revokeObjectURL(a.href);
+          try {
+            await navigator.clipboard.writeText(text);
+            toast(t("shareCopied"), true);
+          } catch (_) {}
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(text);
+          toast(t("shareCopied"), true);
+        } catch (_) {
+          window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(text), "_blank", "noopener");
+        }
       }
 
       function closePosition(reason) {
@@ -1171,9 +1354,11 @@
         state.open = false;
         state.phase = "play";
         state.perps = Math.max(0, AMOUNT + state.pnl);
+        stopTradeTimer();
         unlockTradeAfterClose();
         if (reason === "manual") {
           els.winTitle.textContent = state.pnl >= 0 ? t("closeWinTitle") : t("closeLossTitle");
+          els.win.classList.toggle("loss", state.pnl < 0);
           els.winDetail.textContent = tf("closeDetail", {
             side: sideLabel(),
             lev: state.leverage,
@@ -1194,6 +1379,7 @@
         state.open = false;
         state.phase = "play";
         state.perps = Math.max(0, AMOUNT + state.pnl);
+        stopTradeTimer();
         unlockTradeAfterClose();
         els.slDetail.textContent = tf("slDetail", {
           side: sideLabel(),
@@ -1222,25 +1408,11 @@
         els.pxSlCell.classList.toggle("on", sl != null);
       }
 
-      function drawLineLabel(ctx, label, price, yPos, color, w, h) {
-        const txt = label + " " + fmtPx(price);
-        ctx.font = '600 9px "IBM Plex Mono", monospace';
-        const tw = ctx.measureText(txt).width;
-        let ty = yPos - 4;
-        if (ty < 10) ty = yPos + 12;
-        if (ty > h - 4) ty = h - 4;
-        ctx.fillStyle = "#080c0acc";
-        ctx.fillRect(w - tw - 10, ty - 9, tw + 6, 11);
-        ctx.fillStyle = color;
-        ctx.textAlign = "right";
-        ctx.fillText(txt, w - 4, ty);
-      }
-
       function resizeChart() {
         const box = els.chart.parentElement;
         if (!box) return;
-        const w = Math.max(260, box.clientWidth);
-        const h = window.matchMedia("(max-width:600px)").matches ? 96 : 120;
+        const w = Math.max(280, Math.floor(box.clientWidth));
+        const h = window.matchMedia("(max-width:600px)").matches ? 140 : 168;
         if (els.chart.width !== w || els.chart.height !== h) {
           els.chart.width = w;
           els.chart.height = h;
@@ -1248,78 +1420,169 @@
         drawChart();
       }
 
+      function buildCandles(prices, count) {
+        const n = Math.max(count, 8);
+        const size = Math.max(1, Math.floor(prices.length / n));
+        const candles = [];
+        for (let i = 0; i < n; i++) {
+          const start = i * size;
+          const end = i === n - 1 ? prices.length : Math.min(prices.length, start + size);
+          if (start >= prices.length) break;
+          const slice = prices.slice(start, end);
+          const o = slice[0];
+          const c = slice[slice.length - 1];
+          candles.push({ o, h: Math.max(...slice), l: Math.min(...slice), c });
+        }
+        return candles;
+      }
+
       function drawChart() {
         const ctx = els.chart.getContext("2d");
         const w = els.chart.width, h = els.chart.height;
-        const pad = 8;
+        const padL = 8, padR = 52, padT = 10, padB = 10;
+        const plotW = w - padL - padR;
+        const plotH = h - padT - padB;
         const entry = previewEntry();
         const liq = previewLiq();
         const sl = previewSl();
+        const candleN = Math.max(18, Math.floor(plotW / 9));
+        const candles = buildCandles(history, candleN);
         let lo = Math.min(...history), hi = Math.max(...history);
-        if (entry != null && liq != null && sl != null) {
-          lo = Math.min(lo, entry, liq, sl);
-          hi = Math.max(hi, entry, liq, sl);
-        }
-        lo -= 3; hi += 3;
-        const y = (p) => pad + (hi - p) / (hi - lo) * (h - pad * 2);
+        if (entry != null) { lo = Math.min(lo, entry); hi = Math.max(hi, entry); }
+        if (liq != null) { lo = Math.min(lo, liq); hi = Math.max(hi, liq); }
+        if (sl != null) { lo = Math.min(lo, sl); hi = Math.max(hi, sl); }
+        const padPx = Math.max((hi - lo) * 0.08, PAIRS[state.pair].vol * 2);
+        lo -= padPx; hi += padPx;
+        if (hi <= lo) { hi = lo + 1; }
+        const y = (p) => padT + (hi - p) / (hi - lo) * plotH;
+        const xAt = (i, n) => padL + (i + 0.5) * (plotW / n);
+
         ctx.fillStyle = "#080c0a";
         ctx.fillRect(0, 0, w, h);
-        ctx.strokeStyle = "#1e2e28";
-        ctx.lineWidth = 1;
-        for (let i = 1; i < 4; i++) {
-          const gy = pad + (i / 4) * (h - pad * 2);
-          ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
+
+        // horizontal grid + right price labels
+        ctx.font = '600 9px "IBM Plex Mono", monospace';
+        ctx.textAlign = "left";
+        for (let i = 0; i <= 4; i++) {
+          const gy = padT + (i / 4) * plotH;
+          const gp = hi - (i / 4) * (hi - lo);
+          ctx.strokeStyle = "#15221c";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(padL, gy);
+          ctx.lineTo(w - padR, gy);
+          ctx.stroke();
+          ctx.fillStyle = "#6f857a";
+          ctx.fillText(fmtPx(gp), w - padR + 6, gy + 3);
         }
-        ctx.strokeStyle = "#2ee27a88";
-        ctx.lineWidth = 1.5;
+
+        // vertical time grid
+        for (let i = 1; i < 6; i++) {
+          const gx = padL + (i / 6) * plotW;
+          ctx.strokeStyle = "#111a16";
+          ctx.beginPath();
+          ctx.moveTo(gx, padT);
+          ctx.lineTo(gx, h - padB);
+          ctx.stroke();
+        }
+
+        // candles
+        const gap = Math.max(1, plotW / candles.length * 0.22);
+        const cw = Math.max(2, plotW / candles.length - gap);
+        candles.forEach((cd, i) => {
+          const x = xAt(i, candles.length);
+          const up = cd.c >= cd.o;
+          const color = up ? "#2ee27a" : "#ef5a68";
+          ctx.strokeStyle = color;
+          ctx.fillStyle = color;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, y(cd.h));
+          ctx.lineTo(x, y(cd.l));
+          ctx.stroke();
+          const top = y(Math.max(cd.o, cd.c));
+          const bot = y(Math.min(cd.o, cd.c));
+          const bh = Math.max(1, bot - top);
+          ctx.fillRect(x - cw / 2, top, cw, bh);
+        });
+
+        // soft area under mark path
         ctx.beginPath();
         history.forEach((p, i) => {
-          const x = (i / (history.length - 1)) * w;
+          const x = padL + (i / (history.length - 1)) * plotW;
           i === 0 ? ctx.moveTo(x, y(p)) : ctx.lineTo(x, y(p));
         });
-        ctx.stroke();
-        const markY = y(state.mark);
-        ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = "#e8b84a";
+        ctx.lineTo(padL + plotW, h - padB);
+        ctx.lineTo(padL, h - padB);
+        ctx.closePath();
+        const grad = ctx.createLinearGradient(0, padT, 0, h - padB);
+        grad.addColorStop(0, "#2ee27a18");
+        grad.addColorStop(1, "#2ee27a00");
+        ctx.fillStyle = grad;
+        ctx.fill();
+
         ctx.beginPath();
-        ctx.moveTo(0, markY);
-        ctx.lineTo(w, markY);
+        history.forEach((p, i) => {
+          const x = padL + (i / (history.length - 1)) * plotW;
+          i === 0 ? ctx.moveTo(x, y(p)) : ctx.lineTo(x, y(p));
+        });
+        ctx.strokeStyle = "#2ee27a55";
+        ctx.lineWidth = 1.2;
         ctx.stroke();
-        drawLineLabel(ctx, "M", state.mark, markY, "#e8b84a", w, h);
-        if (entry != null) {
-          const entryY = y(entry);
-          ctx.setLineDash(state.open ? [] : [5, 4]);
-          ctx.strokeStyle = state.side === "short" ? "#ef5a68" : "#2ee27a";
-          ctx.lineWidth = state.open ? 1.5 : 1;
+
+        const lastX = padL + plotW;
+        const lastY = y(state.mark);
+
+        function dashLine(price, color, dash, label) {
+          if (price == null) return;
+          const yy = y(price);
+          ctx.setLineDash(dash);
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.2;
           ctx.beginPath();
-          ctx.moveTo(0, entryY);
-          ctx.lineTo(w, entryY);
+          ctx.moveTo(padL, yy);
+          ctx.lineTo(w - padR, yy);
           ctx.stroke();
-          drawLineLabel(ctx, "E", entry, entryY, state.side === "short" ? "#ef5a68" : "#2ee27a", w, h);
+          ctx.setLineDash([]);
+          const txt = label + " " + fmtPx(price);
+          ctx.font = '700 9px "IBM Plex Mono", monospace';
+          const tw = ctx.measureText(txt).width;
+          ctx.fillStyle = color;
+          ctx.fillRect(w - padR - tw - 8, yy - 7, tw + 6, 12);
+          ctx.fillStyle = "#080c0a";
+          ctx.textAlign = "right";
+          ctx.fillText(txt, w - padR - 4, yy + 2);
+          ctx.textAlign = "left";
         }
-        if (liq != null) {
-          const liqY = y(liq);
-          ctx.setLineDash([3, 3]);
-          ctx.strokeStyle = "#ef5a68";
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(0, liqY);
-          ctx.lineTo(w, liqY);
-          ctx.stroke();
-          drawLineLabel(ctx, "L", liq, liqY, "#ef5a68", w, h);
-        }
-        if (sl != null) {
-          const slY = y(sl);
-          ctx.setLineDash([4, 4]);
-          ctx.strokeStyle = "#e8a04a";
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(0, slY);
-          ctx.lineTo(w, slY);
-          ctx.stroke();
-          drawLineLabel(ctx, "S", sl, slY, "#e8a04a", w, h);
-        }
+
+        if (entry != null) dashLine(entry, state.side === "short" ? "#ef5a68" : "#2ee27a", state.open ? [] : [5, 4], "E");
+        if (sl != null) dashLine(sl, "#e8a04a", [4, 3], "S");
+        if (liq != null) dashLine(liq, "#ef5a68", [3, 3], "L");
+
+        // live mark tag
+        ctx.setLineDash([4, 3]);
+        ctx.strokeStyle = "#e8b84a";
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(padL, lastY);
+        ctx.lineTo(w - padR, lastY);
+        ctx.stroke();
         ctx.setLineDash([]);
+        const mTxt = fmtPx(state.mark);
+        ctx.font = '700 10px "IBM Plex Mono", monospace';
+        const mtw = ctx.measureText(mTxt).width;
+        ctx.fillStyle = "#e8b84a";
+        ctx.fillRect(w - padR + 2, lastY - 8, mtw + 8, 15);
+        ctx.fillStyle = "#0a0f0d";
+        ctx.textAlign = "left";
+        ctx.fillText(mTxt, w - padR + 6, lastY + 3);
+
+        // last price dot
+        ctx.beginPath();
+        ctx.arc(lastX - 2, lastY, 3, 0, Math.PI * 2);
+        ctx.fillStyle = "#e8b84a";
+        ctx.fill();
+
         updatePriceDisplay();
       }
 
@@ -1380,8 +1643,9 @@
       });
 
       function fmt(n) { return n + " <span>DUSD</span>"; }
-      function toast(msg) {
+      function toast(msg, ok) {
         els.toast.textContent = msg;
+        els.toast.classList.toggle("ok", !!ok);
         els.toast.classList.add("show");
         setTimeout(() => els.toast.classList.remove("show"), 2000);
       }
@@ -1451,10 +1715,9 @@
       }
 
       function tick() {
-        if (state.phase === "play" || state.phase === "open") {
-          els.hudTime.textContent = ((performance.now() - state.t0) / 1000).toFixed(1) + "s";
-          state.raf = requestAnimationFrame(tick);
-        }
+        if (!state.timing) return;
+        els.hudTime.textContent = fmtClock(liveElapsedMs());
+        state.raf = requestAnimationFrame(tick);
       }
 
       function makeCoin(parent) {
@@ -1567,7 +1830,9 @@
 
       function startSim() {
         state.phase = "play";
-        state.t0 = performance.now();
+        state.t0 = 0;
+        state.elapsedMs = 0;
+        state.timing = false;
         state.chain = AMOUNT;
         state.cash = AMOUNT;
         mmUpdate();
@@ -1581,7 +1846,7 @@
         makeCoin(els.cashSlot);
         startChart();
         setStatus(t("statusTrap"), false);
-        tick();
+        els.hudTime.textContent = "00:00";
         render();
       }
 
@@ -1631,10 +1896,14 @@
         drawChart();
         setStatus(t("statusWin"), true);
         state.phase = "open";
+        startTradeTimer();
         render();
       });
 
       els.closeBtn.addEventListener("click", () => closePosition("manual"));
+      els.shareBtn.addEventListener("click", shareResult);
+      els.liqShare.addEventListener("click", shareResult);
+      els.slShare.addEventListener("click", shareResult);
 
       document.getElementById("again").addEventListener("click", reset);
       els.liqAgain.addEventListener("click", reset);
@@ -1648,6 +1917,7 @@
         cancelAnimationFrame(state.raf);
         Object.assign(state, {
           phase: "intro", pair: "ETH", cash: 0, perps: 0, chain: 0, mistakes: 0, t0: 0,
+          elapsedMs: 0, timing: false,
           pendingXfer: false, side: "short", leverage: 2,
           mark: PAIRS.ETH.mark, entry: 0, liq: 0, sl: 0, open: false, pnl: 0, liquidated: false, slHit: false,
         });
@@ -1661,7 +1931,7 @@
         els.stage.classList.add("introPhase");
         els.intro.classList.remove("hide");
         els.sim.classList.remove("show");
-        els.win.classList.remove("show");
+        els.win.classList.remove("show", "loss");
         els.transferBar.classList.remove("show");
         els.mintBtn.disabled = false;
         els.pxEntry.textContent = "—";
@@ -1687,7 +1957,7 @@
           b.classList.toggle("short", b.dataset.side === "short");
           b.classList.toggle("long", false);
         });
-        els.hudTime.textContent = "—";
+        els.hudTime.textContent = "00:00";
         els.hudLev.textContent = "—";
         els.hudPnl.textContent = "—";
         els.pxMark.textContent = fmtPx(PAIRS.ETH.mark);
