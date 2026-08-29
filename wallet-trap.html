@@ -78,10 +78,12 @@
         flex-shrink: 0;
       }
       .welcome img {
-        width: 84px;
-        height: 84px;
+        width: 96px;
+        height: auto;
+        max-height: 88px;
         object-fit: contain;
         flex-shrink: 0;
+        background: transparent;
       }
       .welcomeText h1 {
         margin: 0 0 6px;
@@ -466,6 +468,92 @@
         background: transparent;
         color: var(--amber);
       }
+      .shareFire {
+        position: fixed; inset: 0; z-index: 560;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: #0a1c14ee;
+        pointer-events: none;
+      }
+      .shareFire.show { display: flex; }
+      .shareFireStage {
+        position: relative;
+        width: min(420px, 92vw);
+        height: 220px;
+      }
+      .shareFireMascot {
+        position: absolute;
+        left: 8px;
+        bottom: 18px;
+        width: 140px;
+        height: auto;
+        transform-origin: 70% 50%;
+      }
+      .shareFire.show .shareFireMascot { animation: fireRecoil 0.55s ease; }
+      .shareFireFlash {
+        position: absolute;
+        left: 118px;
+        bottom: 78px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #fff 0%, #ffe28a 35%, #ff7a1a00 70%);
+        opacity: 0;
+      }
+      .shareFire.show .shareFireFlash { animation: fireFlash 0.35s ease-out; }
+      .shareFireFlame {
+        position: absolute;
+        left: 122px;
+        bottom: 72px;
+        width: 18px;
+        height: 42px;
+        border-radius: 40% 40% 20% 20%;
+        background: linear-gradient(#fff 0%, #ffd24a 30%, #ff6a1a 70%, transparent);
+        opacity: 0;
+        filter: blur(0.4px);
+      }
+      .shareFire.show .shareFireFlame { animation: fireFlame 0.45s ease-out; }
+      .shareFireLogo {
+        position: absolute;
+        left: 112px;
+        bottom: 70px;
+        width: 72px;
+        height: 72px;
+        background: #2ee27a;
+        -webkit-mask: url("images/standx-mark-clear.png") center / contain no-repeat;
+        mask: url("images/standx-mark-clear.png") center / contain no-repeat;
+        filter: drop-shadow(0 0 10px #2ee27a);
+        opacity: 0;
+      }
+      .shareFire.short .shareFireLogo {
+        background: #ef5a68;
+        filter: drop-shadow(0 0 12px #ef5a68) drop-shadow(0 0 22px #ff6a1a);
+      }
+      .shareFire.show .shareFireLogo { animation: fireLaunch 1.05s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+      .shareFire.short .shareFireFlame {
+        background: linear-gradient(#fff 0%, #ffb04a 25%, #ef5a68 70%, transparent);
+      }
+      @keyframes fireRecoil {
+        0% { transform: translateX(0) rotate(0); }
+        35% { transform: translateX(-10px) rotate(-8deg); }
+        100% { transform: translateX(0) rotate(0); }
+      }
+      @keyframes fireFlash {
+        0% { opacity: 0; transform: scale(0.3); }
+        25% { opacity: 1; transform: scale(1.6); }
+        100% { opacity: 0; transform: scale(2.4); }
+      }
+      @keyframes fireFlame {
+        0% { opacity: 0; transform: scaleY(0.2) translateY(8px); }
+        30% { opacity: 1; transform: scaleY(1.2) translateY(-4px); }
+        100% { opacity: 0; transform: scaleY(1.6) translateY(-18px); }
+      }
+      @keyframes fireLaunch {
+        0% { opacity: 0; transform: translate(0, 8px) rotate(-20deg) scale(0.25); }
+        14% { opacity: 1; transform: translate(18px, -6px) rotate(-8deg) scale(1); }
+        100% { opacity: 0; transform: translate(250px, -150px) rotate(420deg) scale(1.15); }
+      }
       .toast {
         position: fixed; bottom: 12px; left: 50%;
         transform: translateX(-50%) translateY(60px);
@@ -596,7 +684,7 @@
           padding: 12px;
           gap: 10px;
         }
-        .welcome img { width: 56px; height: 56px; }
+        .welcome img { width: 72px; height: auto; max-height: 64px; }
         .welcomeText h1 { font-size: 1rem; }
         .welcomeText p { font-size: 0.82rem; }
         #chart { height: 140px; }
@@ -670,10 +758,18 @@
         <button type="button" id="slShare" class="share" data-i="shareBtn">Paylaş</button>
       </div>
     </div>
+    <div class="shareFire" id="shareFire" aria-hidden="true">
+      <div class="shareFireStage">
+        <img class="shareFireMascot" src="images/stander-photo.png" alt="" />
+        <div class="shareFireFlash"></div>
+        <div class="shareFireFlame"></div>
+        <div class="shareFireLogo"></div>
+      </div>
+    </div>
     <div class="wrap">
       <div class="shell">
         <div class="welcome" id="welcome">
-          <img src="images/stander-fluid.png" alt="Stander" id="mascotImg" />
+          <img src="images/stander-photo.png" alt="Stander" id="mascotImg" />
           <div class="welcomeText">
             <h1 data-i="welcomeTitle">StandX Perps simülasyonuna hoş geldiniz</h1>
             <p data-i="welcomeSub">Cash · Perps · grafik · kaldıraç — kişisel sim, resmi değil.</p>
@@ -835,6 +931,7 @@
           winTitle: "Tuzak geçildi.", againBtn: "Tekrar", breakBtn: "Kırılma haritası",
           shareBtn: "Paylaş",
           shareCopied: "Kopyalandı",
+          shareSaved: "Kart indirildi",
           shareText: "StandX Wallet Trap\n{side} {lev}x {pair}\nPnL {pnl} DUSD · {time}\nhttps://standx-notebook.vercel.app/wallet-trap",
           liqTitle: "Kaybettiniz",
           liqDetail: "{side} {lev}x · liq {liq} · −{loss} DUSD kâğıt",
@@ -891,6 +988,7 @@
           winTitle: "Trap beat.", againBtn: "Again", breakBtn: "Break map",
           shareBtn: "Share",
           shareCopied: "Copied",
+          shareSaved: "Card downloaded",
           shareText: "StandX Wallet Trap\n{side} {lev}x {pair}\nPnL {pnl} DUSD · {time}\nhttps://standx-notebook.vercel.app/wallet-trap",
           liqTitle: "You lost",
           liqDetail: "{side} {lev}x · liq {liq} · −{loss} DUSD paper",
@@ -947,6 +1045,7 @@
           winTitle: "陷阱已破。", againBtn: "再来", breakBtn: "摩擦地图",
           shareBtn: "分享",
           shareCopied: "已复制",
+          shareSaved: "卡片已下载",
           shareText: "StandX Wallet Trap\n{side} {lev}x {pair}\nPnL {pnl} DUSD · {time}\nhttps://standx-notebook.vercel.app/wallet-trap",
           liqTitle: "你输了",
           liqDetail: "{side} {lev}x · 强平 {liq} · −{loss} DUSD 纸面",
@@ -1073,7 +1172,7 @@
         shareBtn: document.getElementById("shareBtn"),
         liqShare: document.getElementById("liqShare"),
         slShare: document.getElementById("slShare"),
-        mascotImg: document.getElementById("mascotImg"),
+        shareFire: document.getElementById("shareFire"),
         chartPair: document.getElementById("chartPair"),
       };
 
@@ -1376,14 +1475,18 @@
 
         drawMountainScene(ctx, W, H, win);
 
-        const mascot = await loadShareMascot();
-        if (mascot) {
-          const mw = 228, mh = 228;
-          ctx.save();
-          ctx.translate(W * 0.72, H * 0.46);
-          ctx.rotate(-0.22);
-          ctx.drawImage(mascot, -mw * 0.42, -mh * 0.55, mw, mh);
-          ctx.restore();
+        if (!isFilePage()) {
+          try {
+            const mascot = await loadShareMascot();
+            if (mascot) {
+              const mw = 228, mh = 228;
+              ctx.save();
+              ctx.translate(W * 0.72, H * 0.46);
+              ctx.rotate(-0.22);
+              ctx.drawImage(mascot, -mw * 0.42, -mh * 0.55, mw, mh);
+              ctx.restore();
+            }
+          } catch (_) {}
         }
 
         ctx.fillStyle = "#0a1c14dd";
@@ -1424,44 +1527,105 @@
         return c;
       }
 
-      async function shareResult() {
-        const text = shareResultText();
-        const url = "https://standx-notebook.vercel.app/wallet-trap";
-        const card = await buildShareCard();
-        const blob = await new Promise((res) => card.toBlob(res, "image/png"));
-        const file = blob ? new File([blob], "standx-wallet-trap.png", { type: "image/png" }) : null;
+      function playShareFire() {
+        return new Promise((resolve) => {
+          const el = els.shareFire;
+          if (!el) { resolve(); return; }
+          el.classList.toggle("short", state.side === "short");
+          el.classList.remove("show");
+          void el.offsetWidth;
+          el.classList.add("show");
+          setTimeout(() => {
+            el.classList.remove("show");
+            resolve();
+          }, 1100);
+        });
+      }
 
-        try {
-          if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ title: "StandX Wallet Trap", text, url, files: [file] });
-            return;
-          }
-          if (navigator.share) {
-            await navigator.share({ title: "StandX Wallet Trap", text, url });
-            return;
-          }
-        } catch (e) {
-          if (e && e.name === "AbortError") return;
+      function isFilePage() {
+        return location.protocol === "file:" || !window.isSecureContext;
+      }
+
+      function copyTextFallback(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+          return navigator.clipboard.writeText(text);
         }
+        return new Promise((resolve, reject) => {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.setAttribute("readonly", "");
+          ta.style.cssText = "position:fixed;left:-9999px;top:0";
+          document.body.appendChild(ta);
+          ta.select();
+          ta.setSelectionRange(0, text.length);
+          const ok = document.execCommand("copy");
+          ta.remove();
+          ok ? resolve() : reject();
+        });
+      }
 
-        if (file) {
-          const a = document.createElement("a");
-          a.href = URL.createObjectURL(blob);
-          a.download = "standx-wallet-trap.png";
-          a.click();
-          URL.revokeObjectURL(a.href);
+      function downloadBlob(blob, name) {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        a.rel = "noopener";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+      }
+
+      function canvasToBlob(canvas) {
+        return new Promise((resolve) => {
           try {
-            await navigator.clipboard.writeText(text);
-            toast(t("shareCopied"), true);
-          } catch (_) {}
-          return;
-        }
+            canvas.toBlob((b) => resolve(b || null), "image/png");
+          } catch (_) {
+            try {
+              const data = canvas.toDataURL("image/png");
+              const bin = atob(data.split(",")[1]);
+              const arr = new Uint8Array(bin.length);
+              for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+              resolve(new Blob([arr], { type: "image/png" }));
+            } catch (e2) {
+              resolve(null);
+            }
+          }
+        });
+      }
 
+      async function shareResult() {
         try {
-          await navigator.clipboard.writeText(text);
-          toast(t("shareCopied"), true);
-        } catch (_) {
-          window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(text), "_blank", "noopener");
+          await playShareFire();
+          const text = shareResultText();
+          const url = "https://standx-notebook.vercel.app/wallet-trap";
+          const card = await buildShareCard();
+          const blob = await canvasToBlob(card);
+          const file = blob ? new File([blob], "standx-wallet-trap.png", { type: "image/png" }) : null;
+          const canNativeShare = !isFilePage() && !!navigator.share;
+
+          if (canNativeShare) {
+            try {
+              if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ title: "StandX Wallet Trap", text, url, files: [file] });
+                return;
+              }
+              await navigator.share({ title: "StandX Wallet Trap", text, url });
+              return;
+            } catch (e) {
+              if (e && e.name === "AbortError") return;
+            }
+          }
+
+          if (blob) downloadBlob(blob, "standx-wallet-trap.png");
+          try {
+            await copyTextFallback(text);
+            toast(blob ? t("shareSaved") : t("shareCopied"), true);
+          } catch (_) {
+            if (blob) toast(t("shareSaved"), true);
+            else window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(text), "_blank", "noopener");
+          }
+        } catch (err) {
+          toast(t("shareSaved"), true);
         }
       }
 
