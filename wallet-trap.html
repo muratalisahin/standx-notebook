@@ -34,7 +34,7 @@
         padding: 12px 16px;
       }
       .wrap {
-        width: min(1040px, 100%);
+        width: min(1180px, 100%);
         max-height: calc(100dvh - 24px);
         display: flex;
         flex-direction: column;
@@ -110,6 +110,17 @@
         padding: 3px 8px;
         border-radius: 999px;
       }
+      .shell.playing .welcome {
+        padding: 8px 14px;
+        gap: 10px;
+      }
+      .shell.playing .welcome img {
+        width: 48px;
+        max-height: 44px;
+      }
+      .shell.playing .welcomeText h1 { font-size: 0.95rem; margin-bottom: 2px; }
+      .shell.playing .welcomeText p { font-size: 0.78rem; }
+      .shell.playing .welcomeText .tag { display: none; }
       .langs { display: flex; gap: 3px; }
       .langs button {
         font: 600 9px "IBM Plex Mono", monospace;
@@ -149,7 +160,7 @@
       .hudCell output.bad { color: var(--red); }
       .hudCell output.short { color: var(--red); }
       .main { flex: 1; min-height: 0; overflow: hidden; position: relative; }
-      .stage { padding: 14px 16px 16px; height: 100%; position: relative; }
+      .stage { padding: 14px 16px 16px; height: 100%; position: relative; display: flex; flex-direction: column; min-height: 0; }
       .stage.introPhase {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
@@ -323,60 +334,71 @@
         width: 100%;
       }
       .mintBtn:disabled { opacity: 0.4; cursor: not-allowed; }
-      .sim { display: none; height: 100%; }
-      .sim.show { display: flex; flex-direction: column; gap: 12px; }
+      .sim { display: none; height: 100%; min-height: 0; }
+      .sim.show { display: flex; flex-direction: column; gap: 10px; min-height: 0; flex: 1; }
       .intro.hide { display: none; }
       .simGrid {
         display: grid;
-        grid-template-columns: minmax(0, 1.55fr) minmax(240px, 320px);
+        grid-template-columns: minmax(0, 1.85fr) minmax(260px, 340px);
         gap: 14px;
         flex: 1;
         min-height: 0;
+        align-items: stretch;
       }
       .chartBox {
         background: var(--panel);
         border: 1px solid var(--line);
         border-radius: 12px;
-        padding: 12px;
+        padding: 10px 12px 12px;
         display: flex;
         flex-direction: column;
         min-height: 0;
+        height: 100%;
       }
       .chartTop {
         display: flex;
         align-items: baseline;
-        gap: 4px;
-        margin-bottom: 4px;
+        gap: 6px;
+        margin-bottom: 8px;
+        flex-shrink: 0;
       }
-      .chartTop span { font: 500 10px "IBM Plex Mono", monospace; color: var(--dim); }
-      .chartTop b { font: 600 10px "IBM Plex Mono", monospace; color: var(--dim); }
-      .chartTop b { font: 600 10px "IBM Plex Mono", monospace; color: var(--dim); }
-      #chart { width: 100%; height: 240px; display: block; border-radius: 6px; background: #080c0a; }
+      .chartTop span { font: 500 11px "IBM Plex Mono", monospace; color: var(--dim); }
+      .chartTop b { font: 700 13px "IBM Plex Mono", monospace; color: var(--ink); letter-spacing: 0.04em; }
+      .chartCanvasWrap {
+        flex: 1;
+        min-height: 260px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #080c0a;
+        border: 1px solid #15221c;
+      }
+      #chart { width: 100%; height: 100%; display: block; background: #080c0a; }
       .chartPrices {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 4px;
-        margin-top: 6px;
+        gap: 6px;
+        margin-top: 8px;
+        flex-shrink: 0;
       }
       .pxCell {
         background: #0a100d;
         border: 1px solid var(--line);
-        border-radius: 6px;
-        padding: 4px 6px;
-        text-align: center;
+        border-radius: 8px;
+        padding: 8px 8px;
+        text-align: left;
         opacity: 0.45;
       }
       .pxCell.on { opacity: 1; }
       .pxCell span {
         display: block;
-        font: 600 7px "IBM Plex Mono", monospace;
-        letter-spacing: 0.08em;
+        font: 600 8px "IBM Plex Mono", monospace;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
         color: var(--dim);
-        margin-bottom: 2px;
+        margin-bottom: 4px;
       }
       .pxCell output {
-        font: 700 11px "IBM Plex Mono", monospace;
+        font: 700 13px "IBM Plex Mono", monospace;
         color: var(--ink);
       }
       .pxCell.mark output { color: var(--amber); }
@@ -387,17 +409,19 @@
       .wallets {
         display: grid;
         grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto 1fr;
         gap: 10px;
         min-height: 0;
+        align-content: start;
       }
       .zone {
         background: var(--panel);
         border: 2px solid var(--line);
         border-radius: 12px;
-        padding: 12px;
+        padding: 10px 12px;
         display: flex;
         flex-direction: column;
-        min-height: 120px;
+        min-height: 100px;
         position: relative;
         transition: border-color 0.2s, opacity 0.2s;
       }
@@ -422,6 +446,7 @@
         border: 2px solid var(--line);
         border-radius: 12px;
         padding: 12px;
+        align-self: stretch;
       }
       .tradeBox.ready { border-color: var(--green); }
       .tradeBox.done { border-color: var(--green); background: #0a1410; }
@@ -718,14 +743,22 @@
           top: 16px;
           right: 16px;
         }
-        #chart { height: 260px; }
+        .chartCanvasWrap { min-height: 320px; }
         .status { padding: 12px 14px; font-size: 13px; }
+        .simGrid { grid-template-columns: minmax(0, 1.9fr) minmax(280px, 360px); }
       }
       @media (min-width: 1000px) {
         .welcomeText h1 { font-size: 1.55rem; }
-        #chart { height: 280px; }
-        .simGrid { grid-template-columns: minmax(0, 1.7fr) minmax(280px, 340px); gap: 16px; }
+        .chartCanvasWrap { min-height: 380px; }
+        .simGrid { grid-template-columns: minmax(0, 2fr) minmax(300px, 380px); gap: 16px; }
+        .pxCell output { font-size: 14px; }
+        .sideRow button, .levRow button, .pairRow button {
+          padding: 10px 6px;
+          font-size: 11px;
+        }
+        .execBtn, .closeBtn { padding: 12px; font-size: 11px; }
       }
+      @media (max-width: 600px) {
         html, body {
           height: auto;
           min-height: 100dvh;
@@ -785,7 +818,7 @@
         .welcome img { width: 72px; height: auto; max-height: 64px; }
         .welcomeText h1 { font-size: 1rem; }
         .welcomeText p { font-size: 0.82rem; }
-        #chart { height: 168px; }
+        .chartCanvasWrap { min-height: 200px; }
         .shellTop {
           flex-wrap: wrap;
           gap: 6px;
@@ -869,7 +902,7 @@
       </div>
     </div>
     <div class="wrap">
-      <div class="shell">
+      <div class="shell" id="shell">
         <div class="welcome" id="welcome">
           <img src="images/stander-photo.png" alt="Stander" id="mascotImg" />
           <div class="welcomeText">
@@ -946,7 +979,9 @@
               <div class="simGrid">
                 <div class="chartBox">
                   <div class="chartTop"><b id="chartPair">ETH</b><span data-i="chartPerp"> · perp</span></div>
-                  <canvas id="chart" width="420" height="240"></canvas>
+                  <div class="chartCanvasWrap">
+                    <canvas id="chart" width="640" height="360"></canvas>
+                  </div>
                   <div class="chartPrices">
                     <div class="pxCell mark on">
                       <span data-i="legMark">mark</span>
@@ -1252,6 +1287,7 @@
       const dropZones = ["cash", "perps"];
 
       const els = {
+        shell: document.getElementById("shell"),
         stage: document.getElementById("stage"),
         intro: document.getElementById("intro"),
         sim: document.getElementById("sim"),
@@ -1821,12 +1857,15 @@
       }
 
       function resizeChart() {
-        const box = els.chart.parentElement;
-        if (!box) return;
-        const w = Math.max(280, Math.floor(box.clientWidth));
+        const wrap = els.chart.parentElement;
+        if (!wrap) return;
+        const w = Math.max(280, Math.floor(wrap.clientWidth));
+        const boxH = wrap.clientHeight;
+        const mobile = window.matchMedia("(max-width:600px)").matches;
         const wide = window.matchMedia("(min-width:1000px)").matches;
         const mid = window.matchMedia("(min-width:760px)").matches;
-        const h = window.matchMedia("(max-width:600px)").matches ? 168 : wide ? 280 : mid ? 260 : 240;
+        const fallback = mobile ? 200 : wide ? 380 : mid ? 320 : 260;
+        const h = Math.max(mobile ? 180 : 240, Math.floor(boxH > 40 ? boxH : fallback));
         if (els.chart.width !== w || els.chart.height !== h) {
           els.chart.width = w;
           els.chart.height = h;
@@ -1837,7 +1876,7 @@
       function drawChart() {
         const ctx = els.chart.getContext("2d");
         const w = els.chart.width, h = els.chart.height;
-        const padL = 8, padR = 52, padT = 10, padB = 10;
+        const padL = 10, padR = Math.max(56, Math.floor(w * 0.09)), padT = 14, padB = 14;
         const plotW = w - padL - padR;
         const plotH = h - padT - padB;
         const entry = previewEntry();
@@ -1851,21 +1890,23 @@
         if (entry != null) { lo = Math.min(lo, entry); hi = Math.max(hi, entry); }
         if (liq != null) { lo = Math.min(lo, liq); hi = Math.max(hi, liq); }
         if (sl != null) { lo = Math.min(lo, sl); hi = Math.max(hi, sl); }
-        const padPx = Math.max((hi - lo) * 0.08, PAIRS[state.pair].vol * 2);
+        const padPx = Math.max((hi - lo) * 0.1, PAIRS[state.pair].vol * 2);
         lo -= padPx; hi += padPx;
         if (hi <= lo) { hi = lo + 1; }
         const y = (p) => padT + (hi - p) / (hi - lo) * plotH;
         const xAt = (i, n) => padL + (i + 0.5) * (plotW / n);
+        const labelFs = h >= 320 ? 11 : 9;
+        const priceFs = h >= 320 ? 12 : 10;
 
         ctx.fillStyle = "#080c0a";
         ctx.fillRect(0, 0, w, h);
 
         // horizontal grid + right price labels
-        ctx.font = '600 9px "IBM Plex Mono", monospace';
+        ctx.font = '600 ' + labelFs + 'px "IBM Plex Mono", monospace';
         ctx.textAlign = "left";
-        for (let i = 0; i <= 4; i++) {
-          const gy = padT + (i / 4) * plotH;
-          const gp = hi - (i / 4) * (hi - lo);
+        for (let i = 0; i <= 5; i++) {
+          const gy = padT + (i / 5) * plotH;
+          const gp = hi - (i / 5) * (hi - lo);
           ctx.strokeStyle = "#15221c";
           ctx.lineWidth = 1;
           ctx.beginPath();
@@ -1873,12 +1914,12 @@
           ctx.lineTo(w - padR, gy);
           ctx.stroke();
           ctx.fillStyle = "#6f857a";
-          ctx.fillText(fmtPx(gp), w - padR + 6, gy + 3);
+          ctx.fillText(fmtPx(gp), w - padR + 6, gy + 4);
         }
 
         // vertical time grid
-        for (let i = 1; i < 6; i++) {
-          const gx = padL + (i / 6) * plotW;
+        for (let i = 1; i < 8; i++) {
+          const gx = padL + (i / 8) * plotW;
           ctx.strokeStyle = "#111a16";
           ctx.beginPath();
           ctx.moveTo(gx, padT);
@@ -1886,28 +1927,28 @@
           ctx.stroke();
         }
 
-        // candles — wider + bolder while a trade is open
-        const view = state.open ? live.slice(-16) : live.slice(-24);
+        // candles — wider when a trade is open (exchange-style)
+        const view = state.open ? live.slice(-20) : live.slice(-28);
         const n = view.length;
-        const gap = Math.max(2, plotW / n * (state.open ? 0.18 : 0.26));
-        const cw = Math.max(state.open ? 7 : 4, plotW / n - gap);
+        const gap = Math.max(2, plotW / n * (state.open ? 0.16 : 0.24));
+        const cw = Math.max(state.open ? 8 : 5, plotW / n - gap);
         view.forEach((cd, i) => {
           const x = xAt(i, n);
           const up = cd.c >= cd.o;
           const color = up ? "#2ee27a" : "#ef5a68";
           const liveBar = i === n - 1;
           ctx.strokeStyle = color;
-          ctx.lineWidth = liveBar ? 2.4 : (state.open ? 2 : 1.4);
+          ctx.lineWidth = liveBar ? 2.6 : (state.open ? 2.2 : 1.5);
           ctx.beginPath();
           ctx.moveTo(x, y(cd.h));
           ctx.lineTo(x, y(cd.l));
           ctx.stroke();
           const top = y(Math.max(cd.o, cd.c));
           const bot = y(Math.min(cd.o, cd.c));
-          const bh = Math.max(state.open ? 5 : 3, bot - top);
+          const bh = Math.max(state.open ? 6 : 3, bot - top);
           if (liveBar) {
             ctx.shadowColor = color;
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = 12;
           }
           ctx.fillStyle = color;
           ctx.fillRect(x - cw / 2, top, cw, bh);
@@ -1925,48 +1966,50 @@
           const yy = y(price);
           ctx.setLineDash(dash);
           ctx.strokeStyle = color;
-          ctx.lineWidth = 1.2;
+          ctx.lineWidth = state.open ? 1.8 : 1.3;
           ctx.beginPath();
           ctx.moveTo(padL, yy);
           ctx.lineTo(w - padR, yy);
           ctx.stroke();
           ctx.setLineDash([]);
           const txt = label + " " + fmtPx(price);
-          ctx.font = '700 9px "IBM Plex Mono", monospace';
+          ctx.font = '700 ' + priceFs + 'px "IBM Plex Mono", monospace';
           const tw = ctx.measureText(txt).width;
+          const tagH = priceFs + 6;
           ctx.fillStyle = color;
-          ctx.fillRect(w - padR - tw - 8, yy - 7, tw + 6, 12);
+          ctx.fillRect(w - padR - tw - 10, yy - tagH / 2, tw + 8, tagH);
           ctx.fillStyle = "#080c0a";
           ctx.textAlign = "right";
-          ctx.fillText(txt, w - padR - 4, yy + 2);
+          ctx.fillText(txt, w - padR - 5, yy + priceFs / 3);
           ctx.textAlign = "left";
         }
 
-        if (entry != null) dashLine(entry, state.side === "short" ? "#ef5a68" : "#2ee27a", state.open ? [] : [5, 4], "E");
-        if (sl != null) dashLine(sl, "#e8a04a", [4, 3], "S");
-        if (liq != null) dashLine(liq, "#ef5a68", [3, 3], "L");
+        if (entry != null) dashLine(entry, state.side === "short" ? "#ef5a68" : "#2ee27a", state.open ? [] : [5, 4], "ENTRY");
+        if (sl != null) dashLine(sl, "#e8a04a", [4, 3], "SL");
+        if (liq != null) dashLine(liq, "#ef5a68", [3, 3], "LIQ");
 
         // live mark tag
         ctx.setLineDash([4, 3]);
         ctx.strokeStyle = "#e8b84a";
-        ctx.lineWidth = 1.4;
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
         ctx.moveTo(padL, lastY);
         ctx.lineTo(w - padR, lastY);
         ctx.stroke();
         ctx.setLineDash([]);
         const mTxt = fmtPx(state.mark);
-        ctx.font = '700 10px "IBM Plex Mono", monospace';
+        ctx.font = '700 ' + priceFs + 'px "IBM Plex Mono", monospace';
         const mtw = ctx.measureText(mTxt).width;
+        const mH = priceFs + 8;
         ctx.fillStyle = "#e8b84a";
-        ctx.fillRect(w - padR + 2, lastY - 8, mtw + 8, 15);
+        ctx.fillRect(w - padR + 2, lastY - mH / 2, mtw + 10, mH);
         ctx.fillStyle = "#0a0f0d";
         ctx.textAlign = "left";
-        ctx.fillText(mTxt, w - padR + 6, lastY + 3);
+        ctx.fillText(mTxt, w - padR + 7, lastY + priceFs / 3);
 
         // last price dot
         ctx.beginPath();
-        ctx.arc(lastX - 2, lastY, 3, 0, Math.PI * 2);
+        ctx.arc(lastX - 2, lastY, state.open ? 4.5 : 3.2, 0, Math.PI * 2);
         ctx.fillStyle = "#e8b84a";
         ctx.fill();
 
@@ -2228,6 +2271,7 @@
         els.stage.classList.remove("introPhase");
         els.intro.classList.add("hide");
         els.sim.classList.add("show");
+        els.shell.classList.add("playing");
         els.perps.classList.remove("locked");
         els.cash.classList.add("active");
         makeCoin(els.cashSlot);
@@ -2236,6 +2280,7 @@
         setStatus(t("statusTrap"), false);
         els.hudTime.textContent = "00:00";
         render();
+        requestAnimationFrame(() => resizeChart());
       }
 
       els.confirmXfer.addEventListener("click", () => {
@@ -2290,6 +2335,7 @@
         state.phase = "open";
         startTradeTimer();
         render();
+        requestAnimationFrame(() => resizeChart());
       });
 
       els.closeBtn.addEventListener("click", () => closePosition("manual"));
@@ -2322,6 +2368,7 @@
         els.stage.classList.add("introPhase");
         els.intro.classList.remove("hide");
         els.sim.classList.remove("show");
+        els.shell.classList.remove("playing");
         els.win.classList.remove("show", "loss");
         els.transferBar.classList.remove("show");
         els.mintBtn.disabled = false;
