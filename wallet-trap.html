@@ -298,7 +298,32 @@
       }
       .mmReject { background: #2a2d30; color: #fff; }
       .mmConfirm { background: #f6851b; color: #121314; }
-      .mmDock.confirming { width: 210px; z-index: 130; }
+      .mmBackdrop {
+        position: fixed;
+        inset: 0;
+        background: #00000066;
+        z-index: 110;
+        display: none;
+      }
+      .mmBackdrop.show { display: block; }
+      .mmDock.confirming {
+        width: 210px;
+        z-index: 600;
+        pointer-events: auto;
+      }
+      .zoneXferBtn {
+        display: none;
+        width: 100%;
+        margin-top: 6px;
+        padding: 8px 6px;
+        border-radius: 7px;
+        border: 1px solid var(--green);
+        background: #2ee27a15;
+        color: var(--green);
+        font: 700 9px "IBM Plex Mono", monospace;
+        cursor: pointer;
+      }
+      .zoneXferBtn.show { display: block; }
       .intro { text-align: center; }
       .introInner {
         max-width: 760px; margin: 0 auto;
@@ -793,7 +818,7 @@
         .hudCell { padding: 8px 10px; }
         .hudCell output { font-size: 16px; }
         .mmDock { width: 188px; top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right)); }
-        .mmDock.confirming { width: 220px; }
+        .mmDock.confirming { width: 220px; z-index: 600; }
         .chartCanvasWrap { min-height: 320px; }
         .status { padding: 12px 14px; font-size: 13px; }
         .simGrid { grid-template-columns: minmax(0, 1.9fr) minmax(280px, 360px); }
@@ -917,6 +942,7 @@
   </head>
   <body>
     <div class="toast" id="toast"></div>
+    <div class="mmBackdrop" id="mmBackdrop"></div>
     <div class="mmDock" id="mmDock">
       <div class="mmTab" aria-hidden="true">
         <span class="mmTabFox">🦊</span>
@@ -1052,6 +1078,7 @@
                     <div class="zoneTitle" data-i="z1Title">Cash</div>
                     <div class="bal" id="cashBal">0 <span>DUSD</span></div>
                     <div class="slot" id="cashSlot"></div>
+                    <button type="button" class="zoneXferBtn" id="cashXferBtn" data-i="cashXferBtn">Perps'e taşı →</button>
                   </div>
                   <div class="zone locked" id="perps" data-drop="perps">
                     <div class="zoneHead" data-i="z2Head">Perps</div>
@@ -1154,6 +1181,7 @@
           mintWarn: "MM’de <b>100</b> görünür · app’te <b>Cash</b> — Perps 0.",
           xferAction: "İç transfer", xferAmount: "Cash → Perps · 100",
           xferWarn: "<b>Zincir tx yok.</b> MM 100 kalır — tuzak bu.",
+          cashXferBtn: "Perps'e taşı →",
           winDetail: "{side} {lev}x · {pnl} DUSD kâğıt · {time}s · {m} hata",
           hudLong: "LONG", hudShort: "SHORT",
           coinLabel: "100 DUSD sürükle",
@@ -1217,6 +1245,7 @@
           mintWarn: "MM shows <b>100</b> · app lands in <b>Cash</b> — Perps 0.",
           xferAction: "Internal transfer", xferAmount: "Cash → Perps · 100",
           xferWarn: "<b>No chain tx.</b> MM stays 100 — that's the trap.",
+          cashXferBtn: "Move to Perps →",
           winDetail: "{side} {lev}x · {pnl} DUSD paper · {time}s · {m} mistake{pl}",
           hudLong: "LONG", hudShort: "SHORT",
           coinLabel: "Drag 100 DUSD",
@@ -1280,6 +1309,7 @@
           mintWarn: "MM 显示 <b>100</b> · app 落入 <b>Cash</b> — Perps 为 0。",
           xferAction: "内部转账", xferAmount: "Cash → Perps · 100",
           xferWarn: "<b>无链上 tx。</b>MM 仍为 100 — 陷阱在此。",
+          cashXferBtn: "转到 Perps →",
           winDetail: "{side} {lev}x · {pnl} DUSD 纸面 · {time}秒 · {m} 次失误",
           hudLong: "多", hudShort: "空",
           coinLabel: "拖动 100 DUSD",
@@ -1349,6 +1379,8 @@
         closeBtn: document.getElementById("closeBtn"),
         transferBar: document.getElementById("transferBar"),
         confirmXfer: document.getElementById("confirmXfer"),
+        cashXferBtn: document.getElementById("cashXferBtn"),
+        mmBackdrop: document.getElementById("mmBackdrop"),
         win: document.getElementById("win"),
         winDetail: document.getElementById("winDetail"),
         toast: document.getElementById("toast"),
@@ -2106,17 +2138,71 @@
         mmPending = cb;
         els.mmPanel.classList.add("confirming");
         els.mmDock.classList.add("confirming");
+        els.mmBackdrop.classList.add("show");
         mmPulse();
+        els.mmDock.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
       function mmCloseTx() {
         els.mmPanel.classList.remove("confirming");
         els.mmDock.classList.remove("confirming");
+        els.mmBackdrop.classList.remove("show");
         mmPending = null;
+      }
+
+      function updateXferUi() {
+        const canXfer = state.phase === "play" && state.cash > 0 && !state.pendingXfer && !state.open;
+        els.cashXferBtn.classList.toggle("show", canXfer);
+      }
+
+      function completeXfer() {
+        state.pendingXfer = false;
+        state.cash = 0;
+        state.perps = AMOUNT;
+        els.transferBar.classList.remove("show");
+        mmSetNote(t("mmNoteXfer"));
+        mmPulse();
+        els.cash.classList.add("done");
+        els.cash.classList.remove("active");
+        els.perps.classList.add("done", "active");
+        els.tradeBox.classList.remove("locked");
+        els.tradeBox.classList.add("ready");
+        els.execBtn.disabled = false;
+        els.execBtn.classList.add("ready");
+        els.execBtn.textContent = execLabel();
+        if (coinEl) coinEl.remove();
+        coinEl = null;
+        setStatus(t("statusReady"), true);
+        drawChart();
+        render();
+        updateXferUi();
+      }
+
+      function cancelXfer() {
+        state.pendingXfer = false;
+        els.transferBar.classList.remove("show");
+        if (coinEl) coinEl.classList.remove("hidden");
+        setStatus(t("statusTrap"), false);
+        updateXferUi();
+      }
+
+      function beginXferConfirm() {
+        if (state.phase !== "play" || state.cash <= 0 || state.open) return;
+        if (els.mmPanel.classList.contains("confirming")) return;
+        if (!state.pendingXfer) {
+          state.pendingXfer = true;
+          if (coinEl) coinEl.classList.add("hidden");
+          els.transferBar.classList.add("show");
+          setStatus(t("statusConfirm"), false);
+          updateXferUi();
+        }
+        mmOpenTx({ action: t("xferAction"), amount: t("xferAmount"), warn: t("xferWarn") }, completeXfer);
       }
 
       els.mmConfirm.addEventListener("click", () => { if (mmPending) mmPending(); mmCloseTx(); });
       els.mmReject.addEventListener("click", () => {
+        const wasXfer = state.pendingXfer;
         mmCloseTx();
+        if (wasXfer) cancelXfer();
         if (state.phase === "intro") els.mintBtn.disabled = false;
       });
 
@@ -2162,6 +2248,7 @@
         if (state.phase === "play" && state.perps > 0 && !state.open) {
           els.execBtn.textContent = execLabel();
         }
+        updateXferUi();
       }
 
       function applyLang() {
@@ -2222,12 +2309,14 @@
       function bindCoin(el) {
         el.addEventListener("pointerdown", (e) => {
           if (state.phase !== "play" || state.pendingXfer || state.cash <= 0) return;
-          drag = { el, ox: e.clientX, oy: e.clientY, moved: false, float: null };
+          drag = { el, ox: e.clientX, oy: e.clientY, lx: e.clientX, ly: e.clientY, moved: false, float: null };
           el.setPointerCapture(e.pointerId);
           el.classList.add("dragging");
         });
         el.addEventListener("pointermove", (e) => {
           if (!drag || drag.el !== el) return;
+          drag.lx = e.clientX;
+          drag.ly = e.clientY;
           const dx = e.clientX - drag.ox, dy = e.clientY - drag.oy;
           if (!drag.moved && Math.hypot(dx, dy) < 5) return;
           if (!drag.moved) {
@@ -2254,12 +2343,11 @@
           el.classList.remove("dragging");
           dropZones.forEach((id) => document.getElementById(id).classList.remove("over"));
           if (drag.float) drag.float.remove();
-          const hit = zoneAt(e.clientX, e.clientY);
-          if (hit && hit.id === "perps" && state.cash > 0) {
-            el.classList.add("hidden");
-            state.pendingXfer = true;
-            els.transferBar.classList.add("show");
-            setStatus(t("statusConfirm"), false);
+          const px = drag.lx ?? e.clientX;
+          const py = drag.ly ?? e.clientY;
+          const hit = zoneAt(px, py);
+          if (hit && hit.id === "perps" && state.cash > 0 && drag.moved) {
+            beginXferConfirm();
           } else if (drag.moved && hit?.id !== "cash") {
             state.mistakes++;
             shake(els.status);
@@ -2331,32 +2419,12 @@
         setStatus(t("statusTrap"), false);
         els.hudTime.textContent = "00:00";
         render();
+        updateXferUi();
         requestAnimationFrame(() => resizeChart());
       }
 
-      els.confirmXfer.addEventListener("click", () => {
-        if (!state.pendingXfer) return;
-        mmOpenTx({ action: t("xferAction"), amount: t("xferAmount"), warn: t("xferWarn") }, () => {
-          state.pendingXfer = false;
-          state.cash = 0;
-          state.perps = AMOUNT;
-          els.transferBar.classList.remove("show");
-          mmSetNote(t("mmNoteXfer"));
-          mmPulse();
-          els.cash.classList.add("done");
-          els.cash.classList.remove("active");
-          els.perps.classList.add("done", "active");
-          els.tradeBox.classList.remove("locked");
-          els.tradeBox.classList.add("ready");
-          els.execBtn.disabled = false;
-          els.execBtn.classList.add("ready");
-          els.execBtn.textContent = execLabel();
-          if (coinEl) coinEl.remove();
-          setStatus(t("statusReady"), true);
-          drawChart();
-          render();
-        });
-      });
+      els.confirmXfer.addEventListener("click", beginXferConfirm);
+      els.cashXferBtn.addEventListener("click", beginXferConfirm);
 
       els.execBtn.addEventListener("click", () => {
         if (state.perps <= 0) {
@@ -2457,6 +2525,7 @@
         drawChart();
         setStatus(t("statusReset"), false);
         render();
+        updateXferUi();
       }
 
       document.querySelectorAll(".langs button").forEach((btn) => {
