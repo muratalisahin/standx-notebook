@@ -152,12 +152,18 @@
       .stage { padding: 14px 16px 16px; height: 100%; position: relative; }
       .stage.introPhase {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
-        gap: 18px;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
         align-items: center;
+        justify-items: center;
       }
-      .stage.introPhase .intro { grid-column: 1; }
-      .stage.introPhase .mmDock { position: static; grid-column: 2; width: 150px; }
+      .stage.introPhase .intro { grid-column: 1; width: 100%; }
+      .stage.introPhase .mmDock {
+        position: static;
+        grid-column: 1;
+        width: min(220px, 100%);
+        justify-self: center;
+      }
       .stage:not(.introPhase) .mmDock {
         position: absolute;
         top: 10px;
@@ -228,49 +234,86 @@
       .mmActions button { padding: 10px; border-radius: 8px; font: 700 11px Inter, sans-serif; cursor: pointer; border: none; }
       .mmReject { background: #2a2d30; color: #fff; }
       .mmConfirm { background: #f6851b; color: #121314; }
-      .intro { text-align: left; }
+      .intro { text-align: center; }
       .introInner {
-        max-width: 560px; margin: 0 auto;
-        padding: 22px 24px; border: 1px solid var(--line);
-        border-radius: 14px; background: #0d1411;
+        max-width: 640px; margin: 0 auto;
+        padding: 28px 28px 24px; border: 1px solid var(--line);
+        border-radius: 16px; background: #0d1411;
+      }
+      .introVisual {
+        display: flex;
+        justify-content: center;
+        margin: 0 0 16px;
+      }
+      .introVisual img {
+        width: 120px;
+        height: auto;
+        max-height: 110px;
+        object-fit: contain;
       }
       .introKicker {
-        margin: 0 0 8px;
-        font: 700 11px "IBM Plex Mono", monospace;
-        letter-spacing: 0.14em;
+        margin: 0 0 10px;
+        font: 700 12px "IBM Plex Mono", monospace;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
         color: var(--green);
       }
-      .intro h1 { font-size: clamp(1.15rem, 2.4vw, 1.45rem); margin: 0 0 10px; letter-spacing: -0.02em; line-height: 1.25; }
-      .introLesson {
+      .intro h1 {
+        font-size: clamp(1.35rem, 3vw, 1.85rem);
         margin: 0 0 14px;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+      }
+      .introLesson {
+        margin: 0 auto 18px;
+        max-width: 52ch;
         color: var(--ink);
-        font-size: 14px;
+        font-size: 15px;
         line-height: 1.55;
         font-weight: 500;
+        text-align: center;
       }
       .introSteps {
-        margin: 0 0 16px;
-        padding: 12px 12px 12px 32px;
-        border: 1px solid #2ee27a22;
-        border-radius: 10px;
+        list-style: none;
+        margin: 0 0 18px;
+        padding: 0;
+        display: grid;
+        gap: 10px;
+        text-align: left;
+      }
+      .introSteps li {
+        margin: 0;
+        padding: 14px 16px;
+        border: 1px solid #2ee27a33;
+        border-radius: 12px;
         background: #0a1410;
-        color: var(--dim);
-        font-size: 13px;
+        color: var(--ink);
+        font-size: 15px;
         line-height: 1.45;
       }
-      .introSteps li { margin: 0 0 8px; }
-      .introSteps li:last-child { margin-bottom: 0; }
-      .introSteps strong { color: var(--ink); font-weight: 700; }
+      .introSteps .watch {
+        display: inline-block;
+        margin-bottom: 6px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid #e8b84a66;
+        background: #e8b84a18;
+        color: var(--amber);
+        font: 700 10px "IBM Plex Mono", monospace;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .introSteps strong { color: var(--green); font-weight: 700; }
       .intro p.introLede {
         color: var(--dim);
         margin: 0 0 16px;
         font: 500 12px "IBM Plex Mono", monospace;
         line-height: 1.45;
+        text-align: center;
       }
       .mintBtn {
-        font: 700 12px "IBM Plex Mono", monospace;
-        padding: 12px 24px; border-radius: 8px;
+        font: 700 14px "IBM Plex Mono", monospace;
+        padding: 14px 28px; border-radius: 10px;
         border: 2px solid var(--green); background: #2ee27a18;
         color: var(--green); cursor: pointer;
         width: 100%;
@@ -770,10 +813,11 @@
         .status { font-size: 11px; padding: 8px 10px; }
         .transferBar { flex-wrap: wrap; gap: 8px; }
         .transferBar button { flex-shrink: 0; }
-        .intro h1 { font-size: 1.05rem; }
-        .introInner { padding: 16px 14px; }
-        .introLesson { font-size: 13px; }
-        .introSteps { font-size: 12px; padding: 10px 10px 10px 28px; }
+        .intro h1 { font-size: 1.25rem; }
+        .introInner { padding: 18px 14px; }
+        .introLesson { font-size: 14px; }
+        .introSteps li { font-size: 14px; padding: 12px 12px; }
+        .introVisual img { width: 96px; max-height: 90px; }
         .stage.introPhase { grid-template-columns: 1fr; }
         .stage.introPhase .mmDock { width: 100%; grid-column: 1; order: -1; }
         .mmTx, .liqOverlay, .slOverlay {
@@ -877,14 +921,17 @@
             </div>
             <div class="intro" id="intro">
               <div class="introInner">
+                <div class="introVisual">
+                  <img src="images/stander-photo.png" alt="Stander" />
+                </div>
                 <p class="introKicker" data-i="introKicker">Cüzdan Tuzağı</p>
                 <h1 data-i="introTitle">Paran var. Trade yok. Neden?</h1>
                 <p class="introLesson" data-i="introLesson">Mint zincirde görünür. Uygulama parayı iki kovaya ayırır: Cash ve Perps. Mint Cash’e düşer. Perps boşsa long/short açılamaz. MetaMask bakiyesi değişmez — tuzak tam burada.</p>
                 <ol class="introSteps">
-                  <li data-i="introStep1"><strong>Mint.</strong> 100 DUSD gelir — Cash’e düşer.</li>
-                  <li data-i="introStep2"><strong>Tuzak.</strong> Cüzdanda para var, Perps kilitli, trade yok.</li>
-                  <li data-i="introStep3"><strong>Taşı.</strong> Cash’ten Perps’e sürükle. Zincir tx yok.</li>
-                  <li data-i="introStep4"><strong>Sonra işlem.</strong> Parite, long/short, kaldıraç.</li>
+                  <li data-i="introStep1"><span class="watch">Buraya dikkat</span><br /><strong>Mint.</strong> 100 DUSD gelir — Cash’e düşer.</li>
+                  <li data-i="introStep2"><span class="watch">Buraya dikkat</span><br /><strong>Tuzak.</strong> Cüzdanda para var, Perps kilitli, trade yok.</li>
+                  <li data-i="introStep3"><span class="watch">Buraya dikkat</span><br /><strong>Taşı.</strong> Cash’ten Perps’e sürükle. Zincir tx yok.</li>
+                  <li data-i="introStep4"><span class="watch">Buraya dikkat</span><br /><strong>Sonra işlem.</strong> Parite, long/short, kaldıraç.</li>
                 </ol>
                 <p class="introLede" data-i="introLede">Kâğıt sim · resmi değil · Devam deyince mint onayı gelir.</p>
                 <button type="button" class="mintBtn" id="mintBtn" data-i="continueBtn">Anladım — mintle</button>
@@ -983,10 +1030,10 @@
           introKicker: "Cüzdan Tuzağı",
           introTitle: "Paran var. Trade yok. Neden?",
           introLesson: "Mint zincirde görünür. Uygulama parayı iki kovaya ayırır: Cash ve Perps. Mint Cash’e düşer. Perps boşsa long/short açılamaz. MetaMask bakiyesi değişmez — tuzak tam burada.",
-          introStep1: "<strong>Mint.</strong> 100 DUSD gelir — Cash’e düşer.",
-          introStep2: "<strong>Tuzak.</strong> Cüzdanda para var, Perps kilitli, trade yok.",
-          introStep3: "<strong>Taşı.</strong> Cash’ten Perps’e sürükle. Zincir tx yok.",
-          introStep4: "<strong>Sonra işlem.</strong> Parite, long/short, kaldıraç.",
+          introStep1: "<span class=\"watch\">Buraya dikkat</span><br /><strong>Mint.</strong> 100 DUSD gelir — Cash’e düşer.",
+          introStep2: "<span class=\"watch\">Buraya dikkat</span><br /><strong>Tuzak.</strong> Cüzdanda para var, Perps kilitli, trade yok.",
+          introStep3: "<span class=\"watch\">Buraya dikkat</span><br /><strong>Taşı.</strong> Cash’ten Perps’e sürükle. Zincir tx yok.",
+          introStep4: "<span class=\"watch\">Buraya dikkat</span><br /><strong>Sonra işlem.</strong> Parite, long/short, kaldıraç.",
           introLede: "Kâğıt sim · resmi değil · Devam deyince mint onayı gelir.",
           continueBtn: "Anladım — mintle",
           legMark: "mark", legEntry: "giriş", legLiq: "liq", legSl: "sl",
@@ -1046,10 +1093,10 @@
           introKicker: "Wallet Trap",
           introTitle: "You have funds. Can't trade. Why?",
           introLesson: "Mint shows on-chain. The app splits money into two buckets: Cash and Perps. Mint lands in Cash. If Perps is empty, long/short stays locked. MetaMask balance doesn't move — that's the trap.",
-          introStep1: "<strong>Mint.</strong> 100 DUSD arrives — into Cash.",
-          introStep2: "<strong>Trap.</strong> Wallet shows money, Perps locked, no trade.",
-          introStep3: "<strong>Move.</strong> Drag Cash → Perps. No chain tx.",
-          introStep4: "<strong>Then trade.</strong> Pair, long/short, leverage.",
+          introStep1: "<span class=\"watch\">Watch this</span><br /><strong>Mint.</strong> 100 DUSD arrives — into Cash.",
+          introStep2: "<span class=\"watch\">Watch this</span><br /><strong>Trap.</strong> Wallet shows money, Perps locked, no trade.",
+          introStep3: "<span class=\"watch\">Watch this</span><br /><strong>Move.</strong> Drag Cash → Perps. No chain tx.",
+          introStep4: "<span class=\"watch\">Watch this</span><br /><strong>Then trade.</strong> Pair, long/short, leverage.",
           introLede: "Paper sim · not official · Continue opens the mint confirm.",
           continueBtn: "Got it — mint",
           legMark: "mark", legEntry: "entry", legLiq: "liq", legSl: "sl",
@@ -1109,10 +1156,10 @@
           introKicker: "钱包陷阱",
           introTitle: "有钱。不能交易。为什么？",
           introLesson: "Mint 显示在链上。App 把资金分成两个桶：Cash 和 Perps。Mint 落入 Cash。Perps 为空时做多/做空锁定。MetaMask 余额不变 — 陷阱在此。",
-          introStep1: "<strong>Mint。</strong> 100 DUSD 到账 — 进入 Cash。",
-          introStep2: "<strong>陷阱。</strong> 钱包有钱，Perps 锁定，无法交易。",
-          introStep3: "<strong>转移。</strong> 从 Cash 拖到 Perps。无链上 tx。",
-          introStep4: "<strong>再交易。</strong> 交易对、多/空、杠杆。",
+          introStep1: "<span class=\"watch\">注意这里</span><br /><strong>Mint。</strong> 100 DUSD 到账 — 进入 Cash。",
+          introStep2: "<span class=\"watch\">注意这里</span><br /><strong>陷阱。</strong> 钱包有钱，Perps 锁定，无法交易。",
+          introStep3: "<span class=\"watch\">注意这里</span><br /><strong>转移。</strong> 从 Cash 拖到 Perps。无链上 tx。",
+          introStep4: "<span class=\"watch\">注意这里</span><br /><strong>再交易。</strong> 交易对、多/空、杠杆。",
           introLede: "纸面模拟 · 非官方 · 继续会弹出 mint 确认。",
           continueBtn: "明白了 — Mint",
           legMark: "标记", legEntry: "入场", legLiq: "强平", legSl: "止损",
