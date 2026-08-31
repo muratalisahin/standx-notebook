@@ -629,28 +629,126 @@
         border: 1px solid var(--green); background: var(--green); color: #0a0f0d; cursor: pointer;
       }
       .win {
-        display: none; padding: 12px; text-align: center;
-        border: 1px solid #2ee27a44; border-radius: 10px; background: #0a1410;
+        display: none;
+      }
+      .resultBanner {
+        position: fixed;
+        inset: 0;
+        z-index: 500;
+        background: #000000cc;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      .resultBanner.show { display: flex; animation: pop 0.35s ease; }
+      .resultCard {
+        width: min(540px, 100%);
+        background: linear-gradient(145deg, #0a1410 0%, #0d1210 55%, #0a100d 100%);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 24px 64px #000000aa;
+      }
+      .resultCard.win { border: 2px solid #2ee27a88; box-shadow: 0 24px 64px #000000aa, 0 0 40px #2ee27a22; }
+      .resultCard.loss { border: 2px solid #ef5a6888; box-shadow: 0 24px 64px #000000aa, 0 0 40px #ef5a6822; }
+      .resultCard.liq { border: 2px solid #ef5a6888; box-shadow: 0 24px 64px #000000aa, 0 0 40px #ef5a6833; }
+      .resultCard.sl { border: 2px solid #e8b84a88; box-shadow: 0 24px 64px #000000aa, 0 0 40px #e8b84a22; }
+      .resultBannerMain {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 18px 18px 10px;
+      }
+      .resultMascot {
+        width: 108px;
+        height: auto;
+        max-height: 118px;
+        object-fit: contain;
         flex-shrink: 0;
+        filter: drop-shadow(0 8px 16px #00000066);
       }
-      .win.show { display: block; }
-      .win h2 { margin: 0 0 4px; color: var(--green); font-size: 1rem; }
-      .win.loss h2 { color: var(--red); }
-      .win p { margin: 0 0 8px; color: var(--dim); font-size: 11px; }
-      .winActions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
-      .win button {
-        font: 600 10px "IBM Plex Mono", monospace;
-        padding: 7px 12px; border-radius: 6px;
-        border: 1px solid var(--green); background: transparent; color: var(--green); cursor: pointer;
+      .resultBannerText { flex: 1; min-width: 0; text-align: left; }
+      .resultKicker {
+        margin: 0 0 4px;
+        font: 700 9px "IBM Plex Mono", monospace;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--dim);
       }
-      .win button.share {
-        border-color: var(--amber); color: var(--amber); background: #e8b84a14;
+      .resultTitle {
+        margin: 0 0 8px;
+        font-size: 1.15rem;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
       }
-      .liqCard .share, .slCard .share {
-        margin-left: 6px;
-        border: 1px solid var(--amber);
-        background: transparent;
+      .resultCard.win .resultTitle { color: var(--green); }
+      .resultCard.loss .resultTitle,
+      .resultCard.liq .resultTitle { color: var(--red); }
+      .resultCard.sl .resultTitle { color: var(--amber); }
+      .resultPnlLabel {
+        margin: 0 0 2px;
+        font: 600 8px "IBM Plex Mono", monospace;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--dim);
+      }
+      .resultPnl {
+        font: 700 clamp(1.75rem, 5vw, 2.35rem) "IBM Plex Mono", monospace;
+        letter-spacing: -0.03em;
+        margin: 0 0 8px;
+        line-height: 1;
+      }
+      .resultPnl.good { color: var(--green); text-shadow: 0 0 24px #2ee27a44; }
+      .resultPnl.bad { color: var(--red); text-shadow: 0 0 24px #ef5a6844; }
+      .resultMeta {
+        margin: 0 0 4px;
+        font: 600 11px "IBM Plex Mono", monospace;
+        color: var(--ink);
+      }
+      .resultDetail {
+        margin: 0;
+        font: 500 10px "IBM Plex Mono", monospace;
+        color: var(--dim);
+        line-height: 1.45;
+      }
+      .resultActions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        padding: 12px 16px 16px;
+        border-top: 1px solid var(--line);
+        background: #080c0acc;
+      }
+      .resultActions button {
+        font: 700 11px "IBM Plex Mono", monospace;
+        padding: 10px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: #0d1411;
+        color: var(--ink);
+      }
+      .resultActions button.share {
+        border-color: var(--amber);
         color: var(--amber);
+        background: #e8b84a18;
+      }
+      .resultActions button.primary {
+        border-color: var(--green);
+        background: var(--green);
+        color: #0a0f0d;
+      }
+      .resultCard.liq .resultActions button.primary,
+      .resultCard.loss .resultActions button.primary {
+        border-color: var(--red);
+        background: var(--red);
+        color: #fff;
+      }
+      .resultCard.sl .resultActions button.primary {
+        border-color: var(--amber);
+        background: var(--amber);
+        color: #0a0f0d;
       }
       .shareFire {
         position: fixed; inset: 0; z-index: 560;
@@ -750,54 +848,7 @@
       .toast.ok {
         border-color: #2ee27a44; color: var(--green); background: #0a1410ee;
       }
-      .liqOverlay {
-        position: fixed; inset: 0; z-index: 500;
-        background: #000000cc;
-        display: none; align-items: center; justify-content: center;
-        padding: 16px;
-      }
-      .liqOverlay.show { display: flex; animation: pop 0.35s ease; }
-      .liqCard {
-        width: min(340px, 100%);
-        background: #12080a;
-        border: 2px solid var(--red);
-        border-radius: 14px;
-        padding: 22px 20px;
-        text-align: center;
-        box-shadow: 0 0 48px #ef5a6844;
-      }
-      .liqCard img { width: 64px; height: 64px; object-fit: contain; margin-bottom: 10px; opacity: 0.85; }
-      .liqCard h2 { margin: 0 0 8px; color: var(--red); font-size: 1.35rem; letter-spacing: -0.02em; }
-      .liqCard p { margin: 0 0 16px; color: var(--dim); font: 500 12px "IBM Plex Mono", monospace; line-height: 1.45; }
-      .liqCard button {
-        font: 700 11px "IBM Plex Mono", monospace;
-        padding: 10px 20px; border-radius: 8px;
-        border: 1px solid var(--red); background: var(--red); color: #fff; cursor: pointer;
-      }
-      .slOverlay {
-        position: fixed; inset: 0; z-index: 500;
-        background: #000000cc;
-        display: none; align-items: center; justify-content: center;
-        padding: 16px;
-      }
-      .slOverlay.show { display: flex; animation: pop 0.35s ease; }
-      .slCard {
-        width: min(340px, 100%);
-        background: #121008;
-        border: 2px solid var(--amber);
-        border-radius: 14px;
-        padding: 22px 20px;
-        text-align: center;
-        box-shadow: 0 0 48px #e8b84a44;
-      }
-      .slCard img { width: 64px; height: 64px; object-fit: contain; margin-bottom: 10px; opacity: 0.85; }
-      .slCard h2 { margin: 0 0 8px; color: var(--amber); font-size: 1.35rem; letter-spacing: -0.02em; }
-      .slCard p { margin: 0 0 16px; color: var(--dim); font: 500 12px "IBM Plex Mono", monospace; line-height: 1.45; }
-      .slCard button {
-        font: 700 11px "IBM Plex Mono", monospace;
-        padding: 10px 20px; border-radius: 8px;
-        border: 1px solid var(--amber); background: var(--amber); color: #0a0f0d; cursor: pointer;
-      }
+      .liqOverlay, .slOverlay { display: none !important; }
       @keyframes pop {
         from { opacity: 0; transform: scale(0.92); }
         to { opacity: 1; transform: scale(1); }
@@ -925,6 +976,11 @@
         .mmDock { width: 156px; }
         .mmDock.confirming { width: min(92vw, 210px); }
         .mmTabFox { width: 26px; height: 26px; font-size: 13px; }
+        .resultBannerMain { flex-direction: column; text-align: center; padding: 16px 14px 8px; }
+        .resultBannerText { text-align: center; }
+        .resultMascot { width: 92px; max-height: 100px; }
+        .resultActions { padding: 10px 12px 14px; }
+        .resultActions button { flex: 1 1 calc(50% - 4px); min-width: 120px; }
         .liqOverlay, .slOverlay {
           padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
         }
@@ -972,24 +1028,28 @@
         </div>
       </div>
     </div>
-    <div class="liqOverlay" id="liqOverlay" role="alertdialog" aria-modal="true">
-      <div class="liqCard">
-        <img src="images/stander-fluid.png" alt="Stander" />
-        <h2 data-i="liqTitle">Kaybettiniz</h2>
-        <p id="liqDetail"></p>
-        <button type="button" id="liqAgain" data-i="againBtn">Tekrar</button>
-        <button type="button" id="liqShare" class="share" data-i="shareBtn">Paylaş</button>
+    <div class="resultBanner" id="resultBanner" role="dialog" aria-modal="true">
+      <div class="resultCard" id="resultCard">
+        <div class="resultBannerMain">
+          <img class="resultMascot" id="resultMascot" src="images/stander-photo.png" alt="Stander" />
+          <div class="resultBannerText">
+            <p class="resultKicker" id="resultKicker" data-i="resultKicker">SONUÇ</p>
+            <h2 class="resultTitle" id="resultTitle">Pozisyon kapandı</h2>
+            <p class="resultPnlLabel" data-i="resultPnlLabel">PnL</p>
+            <div class="resultPnl good" id="resultPnl">+0.00 DUSD</div>
+            <p class="resultMeta" id="resultMeta">SHORT 2x · ETH · 00:00</p>
+            <p class="resultDetail" id="resultDetail"></p>
+          </div>
+        </div>
+        <div class="resultActions">
+          <button type="button" id="resultShare" class="share" data-i="shareBtn">Paylaş</button>
+          <button type="button" id="resultAgain" class="primary" data-i="againBtn">Tekrar</button>
+          <button type="button" id="resultBreak" data-i="breakBtn">Kırılma haritası</button>
+        </div>
       </div>
     </div>
-    <div class="slOverlay" id="slOverlay" role="alertdialog" aria-modal="true">
-      <div class="slCard">
-        <img src="images/stander-fluid.png" alt="Stander" />
-        <h2 data-i="slTitle">Stop loss</h2>
-        <p id="slDetail"></p>
-        <button type="button" id="slAgain" data-i="againBtn">Tekrar</button>
-        <button type="button" id="slShare" class="share" data-i="shareBtn">Paylaş</button>
-      </div>
-    </div>
+    <div class="liqOverlay" id="liqOverlay" hidden aria-hidden="true"></div>
+    <div class="slOverlay" id="slOverlay" hidden aria-hidden="true"></div>
     <div class="shareFire" id="shareFire" aria-hidden="true">
       <div class="shareFireStage">
         <img class="shareFireMascot" src="images/stander-photo.png" alt="" />
@@ -1114,15 +1174,6 @@
                 <p data-i="xferLabel">Cash → Perps · 100 DUSD</p>
                 <button type="button" id="confirmXfer" data-i="xferBtn">Confirm</button>
               </div>
-              <div class="win" id="win">
-                <h2 id="winTitle" data-i="winTitle">Trap beat.</h2>
-                <p id="winDetail"></p>
-                <div class="winActions">
-                  <button type="button" id="shareBtn" class="share" data-i="shareBtn">Paylaş</button>
-                  <button type="button" id="again" data-i="againBtn">Again</button>
-                  <button type="button" id="breakLink" data-i="breakBtn">Break map</button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -1158,6 +1209,12 @@
           shareBtn: "Paylaş",
           shareCopied: "Kopyalandı",
           shareSaved: "Kart indirildi",
+          resultKicker: "Sonuç",
+          resultKickerWin: "Kâr · kâğıt sim",
+          resultKickerLoss: "Zarar · kâğıt sim",
+          resultKickerLiq: "Likidite · kaybettin",
+          resultKickerSl: "Stop loss · kapandı",
+          resultPnlLabel: "PnL",
           shareText: "StandX Wallet Trap\n{side} {lev}x {pair}\nPnL {pnl} DUSD · {time}\nhttps://standx-notebook.vercel.app/wallet-trap",
           liqTitle: "Kaybettiniz",
           liqDetail: "{side} {lev}x · liq {liq} · −{loss} DUSD kâğıt",
@@ -1222,6 +1279,12 @@
           shareBtn: "Share",
           shareCopied: "Copied",
           shareSaved: "Card downloaded",
+          resultKicker: "Result",
+          resultKickerWin: "Profit · paper sim",
+          resultKickerLoss: "Loss · paper sim",
+          resultKickerLiq: "Liquidated · you lost",
+          resultKickerSl: "Stop loss · closed",
+          resultPnlLabel: "PnL",
           shareText: "StandX Wallet Trap\n{side} {lev}x {pair}\nPnL {pnl} DUSD · {time}\nhttps://standx-notebook.vercel.app/wallet-trap",
           liqTitle: "You lost",
           liqDetail: "{side} {lev}x · liq {liq} · −{loss} DUSD paper",
@@ -1286,6 +1349,12 @@
           shareBtn: "分享",
           shareCopied: "已复制",
           shareSaved: "卡片已下载",
+          resultKicker: "结果",
+          resultKickerWin: "盈利 · 纸面模拟",
+          resultKickerLoss: "亏损 · 纸面模拟",
+          resultKickerLiq: "爆仓 · 你输了",
+          resultKickerSl: "止损 · 已平仓",
+          resultPnlLabel: "PnL",
           shareText: "StandX Wallet Trap\n{side} {lev}x {pair}\nPnL {pnl} DUSD · {time}\nhttps://standx-notebook.vercel.app/wallet-trap",
           liqTitle: "你输了",
           liqDetail: "{side} {lev}x · 强平 {liq} · −{loss} DUSD 纸面",
@@ -1358,7 +1427,7 @@
       let tickInBar = 0;
       const BAR_TICKS = 4;
       const MAX_BARS = 28;
-      let coinEl = null, drag = null, chartIv = null;
+      let coinEl = null, drag = null, chartIv = null, lastResultKind = null;
       const dropZones = ["cash", "perps"];
 
       const els = {
@@ -1381,8 +1450,17 @@
         confirmXfer: document.getElementById("confirmXfer"),
         cashXferBtn: document.getElementById("cashXferBtn"),
         mmBackdrop: document.getElementById("mmBackdrop"),
-        win: document.getElementById("win"),
-        winDetail: document.getElementById("winDetail"),
+        resultBanner: document.getElementById("resultBanner"),
+        resultCard: document.getElementById("resultCard"),
+        resultKicker: document.getElementById("resultKicker"),
+        resultTitle: document.getElementById("resultTitle"),
+        resultPnl: document.getElementById("resultPnl"),
+        resultMeta: document.getElementById("resultMeta"),
+        resultDetail: document.getElementById("resultDetail"),
+        resultMascot: document.getElementById("resultMascot"),
+        resultShare: document.getElementById("resultShare"),
+        resultAgain: document.getElementById("resultAgain"),
+        resultBreak: document.getElementById("resultBreak"),
         toast: document.getElementById("toast"),
         hudTime: document.getElementById("hudTime"),
         hudErr: document.getElementById("hudErr"),
@@ -1407,15 +1485,7 @@
         mmConfirm: document.getElementById("mmConfirm"),
         mmReject: document.getElementById("mmReject"),
         liqOverlay: document.getElementById("liqOverlay"),
-        liqDetail: document.getElementById("liqDetail"),
-        liqAgain: document.getElementById("liqAgain"),
         slOverlay: document.getElementById("slOverlay"),
-        slDetail: document.getElementById("slDetail"),
-        slAgain: document.getElementById("slAgain"),
-        winTitle: document.getElementById("winTitle"),
-        shareBtn: document.getElementById("shareBtn"),
-        liqShare: document.getElementById("liqShare"),
-        slShare: document.getElementById("slShare"),
         shareFire: document.getElementById("shareFire"),
         chartPair: document.getElementById("chartPair"),
       };
@@ -1509,19 +1579,12 @@
         state.phase = "liq";
         stopTradeTimer();
         stopChart();
-        els.win.classList.remove("show");
         els.closeBtn.classList.remove("show");
-        els.liqDetail.textContent = tf("liqDetail", {
-          side: sideLabel(),
-          lev: state.leverage,
-          liq: fmtPx(state.liq),
-          loss: (AMOUNT * 0.92).toFixed(1),
-        });
-        els.liqOverlay.classList.add("show");
         setStatus(t("statusLiq"), false);
         els.hudPnl.textContent = state.pnl.toFixed(2);
         els.hudPnl.className = "bad";
         speak("liq");
+        showResultBanner("liq");
         render();
       }
 
@@ -1638,8 +1701,70 @@
           const fresh = new Image();
           fresh.onload = () => { loadShareMascot._img = fresh; resolve(fresh); };
           fresh.onerror = () => resolve(null);
-          fresh.src = "images/stander-climb.png?v=2";
+          fresh.src = "images/stander-photo.png";
         });
+      }
+
+      function hideResultBanner() {
+        els.resultBanner.classList.remove("show");
+        lastResultKind = null;
+      }
+
+      function showResultBanner(kind) {
+        const pnlPositive = state.pnl >= 0;
+        let title, kicker, cardClass, detail;
+        if (kind === "liq") {
+          title = t("liqTitle");
+          kicker = t("resultKickerLiq");
+          cardClass = "liq";
+          detail = tf("liqDetail", {
+            side: sideLabel(),
+            lev: state.leverage,
+            liq: fmtPx(state.liq),
+            loss: (AMOUNT * 0.92).toFixed(1),
+          });
+        } else if (kind === "sl") {
+          title = t("slTitle");
+          kicker = t("resultKickerSl");
+          cardClass = "sl";
+          detail = tf("slDetail", {
+            side: sideLabel(),
+            lev: state.leverage,
+            sl: fmtPx(state.sl),
+            pnl: state.pnl.toFixed(2),
+          });
+        } else if (pnlPositive) {
+          title = t("closeWinTitle");
+          kicker = t("resultKickerWin");
+          cardClass = "win";
+          detail = tf("closeDetail", {
+            side: sideLabel(),
+            lev: state.leverage,
+            pnl: "+" + state.pnl.toFixed(2),
+            time: elapsedSec(),
+          });
+        } else {
+          title = t("closeLossTitle");
+          kicker = t("resultKickerLoss");
+          cardClass = "loss";
+          detail = tf("closeDetail", {
+            side: sideLabel(),
+            lev: state.leverage,
+            pnl: state.pnl.toFixed(2),
+            time: elapsedSec(),
+          });
+        }
+        els.resultKicker.textContent = kicker;
+        els.resultTitle.textContent = title;
+        const pnlStr = (pnlPositive ? "+" : "") + state.pnl.toFixed(2) + " DUSD";
+        els.resultPnl.textContent = pnlStr;
+        els.resultPnl.className = "resultPnl " + (pnlPositive && kind !== "liq" ? "good" : "bad");
+        els.resultMeta.textContent = sideLabel() + " " + state.leverage + "x · " + state.pair + " · " + elapsedSec();
+        els.resultDetail.textContent = detail;
+        els.resultCard.className = "resultCard " + cardClass;
+        els.resultMascot.src = "images/stander-photo.png";
+        els.resultBanner.classList.add("show");
+        lastResultKind = kind;
       }
 
       function drawMountainScene(ctx, W, H, win) {
@@ -1882,15 +2007,7 @@
         stopTradeTimer();
         unlockTradeAfterClose();
         if (reason === "manual") {
-          els.winTitle.textContent = state.pnl >= 0 ? t("closeWinTitle") : t("closeLossTitle");
-          els.win.classList.toggle("loss", state.pnl < 0);
-          els.winDetail.textContent = tf("closeDetail", {
-            side: sideLabel(),
-            lev: state.leverage,
-            pnl: (state.pnl >= 0 ? "+" : "") + state.pnl.toFixed(2),
-            time: elapsedSec(),
-          });
-          els.win.classList.add("show");
+          showResultBanner(state.pnl >= 0 ? "win" : "loss");
           setStatus(t("statusClosed"), state.pnl >= 0);
         }
         drawChart();
@@ -1906,16 +2023,10 @@
         state.perps = Math.max(0, AMOUNT + state.pnl);
         stopTradeTimer();
         unlockTradeAfterClose();
-        els.slDetail.textContent = tf("slDetail", {
-          side: sideLabel(),
-          lev: state.leverage,
-          sl: fmtPx(state.sl),
-          pnl: state.pnl.toFixed(2),
-        });
-        els.slOverlay.classList.add("show");
         setStatus(t("statusSl"), false);
         els.hudPnl.textContent = state.pnl.toFixed(2);
         els.hudPnl.className = "bad";
+        showResultBanner("sl");
         render();
       }
 
@@ -2269,14 +2380,8 @@
         else if (state.phase === "play") setStatus(t("statusTrap"), false);
         document.querySelectorAll(".langs button").forEach((b) => b.classList.toggle("on", b.dataset.lang === lang));
         if (!state.open && state.perps > 0) els.execBtn.textContent = execLabel();
-        if (state.liquidated && state.liq) {
-          const sideLabel = state.side === "short" ? t("hudShort") : t("hudLong");
-          els.liqDetail.textContent = tf("liqDetail", {
-            side: sideLabel,
-            lev: state.leverage,
-            liq: fmtPx(state.liq),
-            loss: (AMOUNT * 0.92).toFixed(1),
-          });
+        if (els.resultBanner.classList.contains("show") && lastResultKind) {
+          showResultBanner(lastResultKind);
         }
         render();
         speak("welcome");
@@ -2458,14 +2563,9 @@
       });
 
       els.closeBtn.addEventListener("click", () => closePosition("manual"));
-      els.shareBtn.addEventListener("click", shareResult);
-      els.liqShare.addEventListener("click", shareResult);
-      els.slShare.addEventListener("click", shareResult);
-
-      document.getElementById("again").addEventListener("click", reset);
-      els.liqAgain.addEventListener("click", reset);
-      els.slAgain.addEventListener("click", reset);
-      document.getElementById("breakLink").addEventListener("click", () => {
+      els.resultShare.addEventListener("click", shareResult);
+      els.resultAgain.addEventListener("click", reset);
+      els.resultBreak.addEventListener("click", () => {
         location.href = "/break";
       });
 
@@ -2479,6 +2579,7 @@
           mark: PAIRS.ETH.mark, entry: 0, liq: 0, sl: 0, open: false, pnl: 0, liquidated: false, slHit: false,
         });
         speechSynthesis?.cancel();
+        hideResultBanner();
         els.liqOverlay.classList.remove("show");
         els.slOverlay.classList.remove("show");
         seedCandles(PAIRS.ETH.mark);
@@ -2488,7 +2589,6 @@
         els.intro.classList.remove("hide");
         els.sim.classList.remove("show");
         els.shell.classList.remove("playing");
-        els.win.classList.remove("show", "loss");
         els.transferBar.classList.remove("show");
         els.mintBtn.disabled = false;
         els.pxEntry.textContent = "—";
