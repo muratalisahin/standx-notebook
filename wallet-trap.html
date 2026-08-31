@@ -169,27 +169,52 @@
         justify-items: center;
       }
       .stage.introPhase .intro { grid-column: 1; width: 100%; }
-      .stage.introPhase .mmDock {
-        position: static;
-        grid-column: 1;
-        width: min(220px, 100%);
-        justify-self: center;
+      .mmDock {
+        position: fixed;
+        top: max(10px, env(safe-area-inset-top));
+        right: max(10px, env(safe-area-inset-right));
+        width: 172px;
+        z-index: 120;
+        pointer-events: none;
       }
-      .stage:not(.introPhase) .mmDock {
-        position: absolute;
-        top: 10px;
-        right: 12px;
-        width: 150px;
-        z-index: 50;
+      .mmTab {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 4px;
+        pointer-events: auto;
+      }
+      .mmTabFox {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #e2761b, #f6851b);
+        border: 1px solid #f6851b99;
+        box-shadow: 0 4px 14px #00000066, 0 0 0 1px #ffffff12 inset;
+        display: grid;
+        place-items: center;
+        font-size: 15px;
+        cursor: default;
       }
       .mmPanel {
+        pointer-events: auto;
         background: #121314;
         border: 1px solid #2a2d30;
-        border-radius: 10px;
+        border-radius: 12px;
         overflow: hidden;
         font-size: 10px;
-        box-shadow: 0 8px 24px #00000066;
+        box-shadow: 0 14px 36px #00000088, 0 0 0 1px #ffffff08 inset;
+        transform-origin: top right;
+        animation: mmPop 0.22s ease;
       }
+      @keyframes mmPop {
+        from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @keyframes mmPulseAnim {
+        0%, 100% { box-shadow: 0 14px 36px #00000088; }
+        50% { box-shadow: 0 14px 36px #00000088, 0 0 0 3px #f6851b66; }
+      }
+      .mmPanel.mmPulse { animation: mmPulseAnim 0.55s ease 2; }
       .mmHead {
         display: flex;
         align-items: center;
@@ -738,11 +763,7 @@
         .shellTop { padding: 10px 18px; }
         .hudCell { padding: 8px 10px; }
         .hudCell output { font-size: 16px; }
-        .stage:not(.introPhase) .mmDock {
-          width: 188px;
-          top: 16px;
-          right: 16px;
-        }
+        .mmDock { width: 188px; top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right)); }
         .chartCanvasWrap { min-height: 320px; }
         .status { padding: 12px 14px; font-size: 13px; }
         .simGrid { grid-template-columns: minmax(0, 1.9fr) minmax(280px, 360px); }
@@ -789,17 +810,6 @@
         .stage {
           height: auto;
           padding: 8px 10px 12px;
-        }
-        .stage:not(.introPhase) {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        .stage:not(.introPhase) .mmDock {
-          position: static;
-          width: 100%;
-          order: -1;
-          margin-bottom: 0;
         }
         .sim {
           height: auto;
@@ -857,7 +867,8 @@
         .introVisual img { width: 128px; max-height: 118px; }
         .mintBtn { font-size: 13px; padding: 14px 20px; }
         .stage.introPhase { grid-template-columns: 1fr; }
-        .stage.introPhase .mmDock { width: 100%; grid-column: 1; order: -1; }
+        .mmDock { width: 156px; }
+        .mmTabFox { width: 26px; height: 26px; font-size: 13px; }
         .mmTx, .liqOverlay, .slOverlay {
           padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
         }
@@ -875,6 +886,35 @@
   </head>
   <body>
     <div class="toast" id="toast"></div>
+    <div class="mmDock" id="mmDock">
+      <div class="mmTab" aria-hidden="true">
+        <span class="mmTabFox">🦊</span>
+      </div>
+      <div class="mmPanel" id="mmPanel">
+        <div class="mmHead">
+          <div class="mmFox">🦊</div>
+          <div><b>MetaMask</b><span id="mmAddr">0x762E…6c8E</span></div>
+        </div>
+        <div class="mmBody">
+          <div class="mmRow"><span class="mmTok"><i>D</i> DUSD</span><span class="mmBal" id="mmBal">0</span></div>
+          <p class="mmNote" id="mmNote" data-i="mmNoteDefault">on-chain · not app bucket</p>
+        </div>
+      </div>
+    </div>
+    <div class="mmTx" id="mmTx" role="dialog" aria-modal="true">
+      <div class="mmCard">
+        <div class="mmCardHead"><h3 data-i="mmTxTitle">Confirm</h3></div>
+        <div class="mmCardBody">
+          <div class="mmLine"><span data-i="mmLineAction">Action</span><b id="mmTxAction"></b></div>
+          <div class="mmLine"><span data-i="mmLineAmount">Amount</span><b id="mmTxAmt"></b></div>
+          <p class="mmWarn" id="mmTxWarn"></p>
+        </div>
+        <div class="mmActions">
+          <button type="button" class="mmReject" id="mmReject" data-i="mmReject">Reject</button>
+          <button type="button" class="mmConfirm" id="mmConfirm" data-i="mmConfirm">Confirm</button>
+        </div>
+      </div>
+    </div>
     <div class="liqOverlay" id="liqOverlay" role="alertdialog" aria-modal="true">
       <div class="liqCard">
         <img src="images/stander-fluid.png" alt="Stander" />
@@ -931,32 +971,6 @@
         </div>
         <div class="main">
           <div class="stage introPhase" id="stage">
-            <div class="mmDock" id="mmDock">
-              <div class="mmPanel" id="mmPanel">
-                <div class="mmHead">
-                  <div class="mmFox">🦊</div>
-                  <div><b>MetaMask</b><span id="mmAddr">0x762E…6c8E</span></div>
-                </div>
-                <div class="mmBody">
-                  <div class="mmRow"><span class="mmTok"><i>D</i> DUSD</span><span class="mmBal" id="mmBal">0</span></div>
-                  <p class="mmNote" id="mmNote" data-i="mmNoteDefault">on-chain · not app bucket</p>
-                </div>
-              </div>
-            </div>
-            <div class="mmTx" id="mmTx" role="dialog" aria-modal="true">
-              <div class="mmCard">
-                <div class="mmCardHead"><h3 data-i="mmTxTitle">Confirm</h3></div>
-                <div class="mmCardBody">
-                  <div class="mmLine"><span data-i="mmLineAction">Action</span><b id="mmTxAction"></b></div>
-                  <div class="mmLine"><span data-i="mmLineAmount">Amount</span><b id="mmTxAmt"></b></div>
-                  <p class="mmWarn" id="mmTxWarn"></p>
-                </div>
-                <div class="mmActions">
-                  <button type="button" class="mmReject" id="mmReject" data-i="mmReject">Reject</button>
-                  <button type="button" class="mmConfirm" id="mmConfirm" data-i="mmConfirm">Confirm</button>
-                </div>
-              </div>
-            </div>
             <div class="intro" id="intro">
               <div class="introInner">
                 <div class="introVisual">
